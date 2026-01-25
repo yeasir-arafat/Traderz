@@ -78,6 +78,6 @@ class User(Base):
     buyer_orders = relationship("Order", back_populates="buyer", foreign_keys="Order.buyer_id")
     seller_orders = relationship("Order", back_populates="seller", foreign_keys="Order.seller_id")
     notifications = relationship("Notification", back_populates="user")
-    kyc_submissions = relationship("KycSubmission", back_populates="user")
+    kyc_submissions = relationship("KycSubmission", back_populates="user", foreign_keys="KycSubmission.user_id")
     reviews_given = relationship("Review", back_populates="reviewer", foreign_keys="Review.reviewer_id")
     reviews_received = relationship("Review", back_populates="reviewee", foreign_keys="Review.reviewee_id")
