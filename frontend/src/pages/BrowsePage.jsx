@@ -80,7 +80,7 @@ export default function BrowsePage() {
   
   const clearFilters = () => {
     setSearch('');
-    setSelectedGame('');
+    setSelectedGame('all');
     setMinPrice('');
     setMaxPrice('');
     setPage(1);
