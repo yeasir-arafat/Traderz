@@ -1,81 +1,67 @@
 {
-  "timestamp": "2026-01-25T16:27:14.949003",
+  "timestamp": "2026-01-25T16:28:15.515903",
   "base_url": "https://gameswap-14.preview.emergentagent.com",
   "summary": {
-    "tests_run": 7,
-    "tests_passed": 2,
-    "tests_failed": 5,
-    "success_rate": 28.57142857142857
+    "tests_run": 9,
+    "tests_passed": 9,
+    "tests_failed": 0,
+    "success_rate": 100.0
   },
   "test_results": [
     {
       "name": "Health Check",
       "success": true,
       "details": "",
-      "timestamp": "2026-01-25T16:27:13.689712"
+      "timestamp": "2026-01-25T16:28:12.121892"
     },
     {
       "name": "Database Health Check",
       "success": true,
       "details": "",
-      "timestamp": "2026-01-25T16:27:14.623904"
+      "timestamp": "2026-01-25T16:28:12.319360"
     },
     {
       "name": "Games List",
-      "success": false,
-      "details": "Invalid response: {'success': False, 'error': {'code': 'INTERNAL_ERROR', 'message': 'An internal error occurred'}}",
-      "timestamp": "2026-01-25T16:27:14.633354"
+      "success": true,
+      "details": "Found 8 games",
+      "timestamp": "2026-01-25T16:28:12.599727"
+    },
+    {
+      "name": "Games Structure",
+      "success": true,
+      "details": "All required fields present",
+      "timestamp": "2026-01-25T16:28:12.599749"
     },
     {
       "name": "User Registration",
-      "success": false,
-      "details": "Registration failed: {'success': False, 'error': {'code': 'INTERNAL_ERROR', 'message': 'An internal error occurred'}}",
-      "timestamp": "2026-01-25T16:27:14.770211"
+      "success": true,
+      "details": "User created: testuser_162812",
+      "timestamp": "2026-01-25T16:28:13.697479"
+    },
+    {
+      "name": "Invalid Login",
+      "success": true,
+      "details": "Correctly rejected invalid credentials",
+      "timestamp": "2026-01-25T16:28:13.867859"
     },
     {
       "name": "Admin Login",
-      "success": false,
-      "details": "Admin login failed: {'success': False, 'error': {'code': 'INTERNAL_ERROR', 'message': 'An internal error occurred'}}",
-      "timestamp": "2026-01-25T16:27:14.860322"
+      "success": true,
+      "details": "Admin logged in: admin@admin.com",
+      "timestamp": "2026-01-25T16:28:14.618883"
     },
     {
       "name": "Super Admin Login",
-      "success": false,
-      "details": "Super admin login failed: {'success': False, 'error': {'code': 'INTERNAL_ERROR', 'message': 'An internal error occurred'}}",
-      "timestamp": "2026-01-25T16:27:14.948965"
+      "success": true,
+      "details": "Super admin logged in: super@admin.com",
+      "timestamp": "2026-01-25T16:28:15.345029"
     },
     {
       "name": "Get Current User",
-      "success": false,
-      "details": "No user token available",
-      "timestamp": "2026-01-25T16:27:14.948978"
+      "success": true,
+      "details": "User profile retrieved",
+      "timestamp": "2026-01-25T16:28:15.515881"
     }
   ],
-  "failed_tests": [
-    {
-      "test": "Games List",
-      "error": "Invalid response: {'success': False, 'error': {'code': 'INTERNAL_ERROR', 'message': 'An internal error occurred'}}",
-      "response": null
-    },
-    {
-      "test": "User Registration",
-      "error": "Registration failed: {'success': False, 'error': {'code': 'INTERNAL_ERROR', 'message': 'An internal error occurred'}}",
-      "response": null
-    },
-    {
-      "test": "Admin Login",
-      "error": "Admin login failed: {'success': False, 'error': {'code': 'INTERNAL_ERROR', 'message': 'An internal error occurred'}}",
-      "response": null
-    },
-    {
-      "test": "Super Admin Login",
-      "error": "Super admin login failed: {'success': False, 'error': {'code': 'INTERNAL_ERROR', 'message': 'An internal error occurred'}}",
-      "response": null
-    },
-    {
-      "test": "Get Current User",
-      "error": "No user token available",
-      "response": null
-    }
-  ]
+  "failed_tests": []
 }
