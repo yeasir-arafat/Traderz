@@ -26,7 +26,7 @@ export default function BrowsePage() {
   const [page, setPage] = useState(1);
   
   const [search, setSearch] = useState(searchParams.get('search') || '');
-  const [selectedGame, setSelectedGame] = useState(searchParams.get('game') || '');
+  const [selectedGame, setSelectedGame] = useState(searchParams.get('game') || 'all');
   const [minPrice, setMinPrice] = useState(searchParams.get('min_price') || '');
   const [maxPrice, setMaxPrice] = useState(searchParams.get('max_price') || '');
   const [showFilters, setShowFilters] = useState(false);
