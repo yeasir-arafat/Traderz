@@ -169,6 +169,7 @@ export const reviewsAPI = {
 // Admin API
 export const adminAPI = {
   getDashboard: () => api.get('/admin/dashboard'),
+  getDisputes: (params) => api.get('/admin/disputes', { params }),
 };
 
 // Super Admin API
