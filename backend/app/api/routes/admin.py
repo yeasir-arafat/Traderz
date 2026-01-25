@@ -54,3 +54,41 @@ async def get_dashboard(
         "disputed_orders": disputed_orders_count,
         "active_orders": active_orders_count
     })
+
+
+@router.get("/disputes")
+async def get_disputed_orders(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
+    user: User = Depends(require_admin),
+    db: AsyncSession = Depends(get_db)
+):
+    """Get disputed orders for admin resolution"""
+    query = select(Order).options(
+        selectinload(Order.buyer),
+        selectinload(Order.seller),
+        selectinload(Order.listing)
+    ).where(Order.status == OrderStatus.DISPUTED)
+    
+    # Count total
+    count_result = await db.execute(
+        select(func.count(Order.id)).where(Order.status == OrderStatus.DISPUTED)
+    )
+    total = count_result.scalar() or 0
+    
+    # Paginate
+    query = query.order_by(Order.disputed_at.desc())
+    query = query.offset((page - 1) * page_size).limit(page_size)
+    
+    result = await db.execute(query)
+    orders = result.scalars().all()
+    
+    total_pages = (total + page_size - 1) // page_size
+    
+    return success_response({
+        "orders": [OrderResponse.model_validate(o).model_dump() for o in orders],
+        "total": total,
+        "page": page,
+        "page_size": page_size,
+        "total_pages": total_pages
+    })
