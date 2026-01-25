@@ -72,7 +72,7 @@ export default function BrowsePage() {
     setPage(1);
     const params = new URLSearchParams();
     if (search) params.set('search', search);
-    if (selectedGame) params.set('game', selectedGame);
+    if (selectedGame && selectedGame !== 'all') params.set('game', selectedGame);
     if (minPrice) params.set('min_price', minPrice);
     if (maxPrice) params.set('max_price', maxPrice);
     setSearchParams(params);
