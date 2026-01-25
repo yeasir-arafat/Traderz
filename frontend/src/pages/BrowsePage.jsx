@@ -87,7 +87,7 @@ export default function BrowsePage() {
     setSearchParams({});
   };
   
-  const hasFilters = search || selectedGame || minPrice || maxPrice;
+  const hasFilters = search || (selectedGame && selectedGame !== 'all') || minPrice || maxPrice;
   
   return (
     <div className="container mx-auto px-4 py-8">
