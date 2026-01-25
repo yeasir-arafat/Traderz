@@ -51,7 +51,7 @@ export default function BrowsePage() {
           page,
           page_size: 20,
           ...(search && { search }),
-          ...(selectedGame && { game_id: selectedGame }),
+          ...(selectedGame && selectedGame !== 'all' && { game_id: selectedGame }),
           ...(minPrice && { min_price: parseFloat(minPrice) }),
           ...(maxPrice && { max_price: parseFloat(maxPrice) }),
         };
