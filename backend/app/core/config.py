@@ -1,6 +1,6 @@
 from pydantic_settings import BaseSettings
 from functools import lru_cache
-from typing import Optional
+from typing import Optional, List
 
 
 class Settings(BaseSettings):
@@ -14,13 +14,17 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
     
-    # Firebase
-    FIREBASE_PROJECT_ID: str
+    # Firebase (from environment - no hardcoding)
+    FIREBASE_PROJECT_ID: Optional[str] = None
+    FIREBASE_CLIENT_EMAIL: Optional[str] = None
+    FIREBASE_PRIVATE_KEY: Optional[str] = None
     
     # App
     APP_NAME: str = "PlayTraderz"
     DEBUG: bool = False
-    CORS_ORIGINS: str = "*"
+    
+    # CORS - strict list, no "*" in production
+    ALLOWED_ORIGINS: str = "http://localhost:3000,http://localhost:5173"
     
     # File uploads
     UPLOAD_DIR: str = "/app/uploads"
@@ -29,6 +33,12 @@ class Settings(BaseSettings):
     class Config:
         env_file = ".env"
         extra = "ignore"
+    
+    def get_cors_origins(self) -> List[str]:
+        """Parse ALLOWED_ORIGINS into list"""
+        if not self.ALLOWED_ORIGINS:
+            return ["http://localhost:3000"]
+        return [origin.strip() for origin in self.ALLOWED_ORIGINS.split(",") if origin.strip()]
 
 
 @lru_cache()

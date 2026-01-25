@@ -3,7 +3,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 import aiofiles
 import os
 from uuid import uuid4
-from datetime import datetime
+from io import BytesIO
+import logging
 
 from app.core.config import settings
 from app.core.database import get_db
@@ -13,12 +14,31 @@ from app.models.user import User
 from app.core.errors import AppException
 from app.core.responses import ErrorCodes
 
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/upload", tags=["Upload"])
 
-
+# Allowed extensions and MIME types
 ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp", ".gif"}
+ALLOWED_MIME_TYPES = {
+    "image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif"
+}
 MAX_FILE_SIZE = 5 * 1024 * 1024  # 5MB
+
+
+def validate_image_content(content: bytes, filename: str) -> bool:
+    """
+    Validate image content using Pillow.
+    Returns True if valid image, False otherwise.
+    """
+    try:
+        from PIL import Image
+        img = Image.open(BytesIO(content))
+        img.verify()  # Verify it's a valid image
+        return True
+    except Exception as e:
+        logger.warning(f"Image validation failed for {filename}: {e}")
+        return False
 
 
 @router.post("/listing")
@@ -40,24 +60,46 @@ async def upload_kyc_document(
 
 
 async def _upload_file(file: UploadFile, folder: str, user_id: str):
-    """Generic file upload handler"""
-    # Check extension
-    ext = os.path.splitext(file.filename)[1].lower()
+    """Generic file upload handler with security validations"""
+    
+    # 1. Check file extension
+    ext = os.path.splitext(file.filename or "")[1].lower()
     if ext not in ALLOWED_EXTENSIONS:
         raise AppException(
-            ErrorCodes.VALIDATION_ERROR,
+            "INVALID_FILE",
             f"Invalid file type. Allowed: {', '.join(ALLOWED_EXTENSIONS)}"
         )
     
-    # Check size
+    # 2. Check MIME type from upload headers
+    content_type = file.content_type or ""
+    if content_type not in ALLOWED_MIME_TYPES:
+        raise AppException(
+            "INVALID_FILE",
+            "Invalid image file. MIME type not allowed."
+        )
+    
+    # 3. Read content and check size
     content = await file.read()
     if len(content) > MAX_FILE_SIZE:
         raise AppException(
-            ErrorCodes.VALIDATION_ERROR,
+            "INVALID_FILE",
             f"File too large. Maximum size: {MAX_FILE_SIZE // (1024*1024)}MB"
         )
     
-    # Generate unique filename
+    if len(content) == 0:
+        raise AppException(
+            "INVALID_FILE",
+            "Empty file not allowed."
+        )
+    
+    # 4. Validate actual image content using Pillow
+    if not validate_image_content(content, file.filename or "unknown"):
+        raise AppException(
+            "INVALID_FILE",
+            "Invalid image file. Could not process image content."
+        )
+    
+    # 5. Generate unique filename and save
     filename = f"{user_id}_{uuid4().hex}{ext}"
     filepath = os.path.join(settings.UPLOAD_DIR, folder, filename)
     
@@ -71,4 +113,5 @@ async def _upload_file(file: UploadFile, folder: str, user_id: str):
     # Return URL
     url = f"/uploads/{folder}/{filename}"
     
+    logger.info(f"File uploaded: {url} by user {user_id}")
     return success_response({"url": url, "filename": filename})
