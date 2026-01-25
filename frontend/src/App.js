@@ -18,6 +18,17 @@ import OrderDetailsPage from './pages/OrderDetailsPage';
 import ChatPage from './pages/ChatPage';
 import FAQPage from './pages/FAQPage';
 import NotFoundPage from './pages/NotFoundPage';
+import KycPage from './pages/KycPage';
+
+// Seller Pages
+import MyListingsPage from './pages/seller/MyListingsPage';
+import CreateListingPage from './pages/seller/CreateListingPage';
+
+// Admin Pages
+import AdminDashboardPage from './pages/admin/AdminDashboardPage';
+import PendingListingsPage from './pages/admin/PendingListingsPage';
+import PendingKycPage from './pages/admin/PendingKycPage';
+import DisputesPage from './pages/admin/DisputesPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -34,6 +45,31 @@ function ProtectedRoute({ children }) {
   const { isAuthenticated } = useAuthStore();
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
+  }
+  return children;
+}
+
+// Seller Route wrapper
+function SellerRoute({ children }) {
+  const { isAuthenticated, user } = useAuthStore();
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+  if (!user?.roles?.includes('seller')) {
+    return <Navigate to="/profile" replace />;
+  }
+  return children;
+}
+
+// Admin Route wrapper
+function AdminRoute({ children }) {
+  const { isAuthenticated, user } = useAuthStore();
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+  const isAdmin = user?.roles?.includes('admin') || user?.roles?.includes('super_admin');
+  if (!isAdmin) {
+    return <Navigate to="/" replace />;
   }
   return children;
 }
@@ -105,6 +141,74 @@ function App() {
                       <ProtectedRoute>
                         <ChatPage />
                       </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/kyc"
+                    element={
+                      <ProtectedRoute>
+                        <KycPage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  
+                  {/* Seller routes */}
+                  <Route
+                    path="/my-listings"
+                    element={
+                      <SellerRoute>
+                        <MyListingsPage />
+                      </SellerRoute>
+                    }
+                  />
+                  <Route
+                    path="/sell/new"
+                    element={
+                      <SellerRoute>
+                        <CreateListingPage />
+                      </SellerRoute>
+                    }
+                  />
+                  <Route
+                    path="/sell/:id/edit"
+                    element={
+                      <SellerRoute>
+                        <CreateListingPage />
+                      </SellerRoute>
+                    }
+                  />
+                  
+                  {/* Admin routes */}
+                  <Route
+                    path="/admin"
+                    element={
+                      <AdminRoute>
+                        <AdminDashboardPage />
+                      </AdminRoute>
+                    }
+                  />
+                  <Route
+                    path="/admin/listings"
+                    element={
+                      <AdminRoute>
+                        <PendingListingsPage />
+                      </AdminRoute>
+                    }
+                  />
+                  <Route
+                    path="/admin/kyc"
+                    element={
+                      <AdminRoute>
+                        <PendingKycPage />
+                      </AdminRoute>
+                    }
+                  />
+                  <Route
+                    path="/admin/disputes"
+                    element={
+                      <AdminRoute>
+                        <DisputesPage />
+                      </AdminRoute>
                     }
                   />
                   
