@@ -1,0 +1,81 @@
+{
+  "timestamp": "2026-01-25T16:27:14.949003",
+  "base_url": "https://gameswap-14.preview.emergentagent.com",
+  "summary": {
+    "tests_run": 7,
+    "tests_passed": 2,
+    "tests_failed": 5,
+    "success_rate": 28.57142857142857
+  },
+  "test_results": [
+    {
+      "name": "Health Check",
+      "success": true,
+      "details": "",
+      "timestamp": "2026-01-25T16:27:13.689712"
+    },
+    {
+      "name": "Database Health Check",
+      "success": true,
+      "details": "",
+      "timestamp": "2026-01-25T16:27:14.623904"
+    },
+    {
+      "name": "Games List",
+      "success": false,
+      "details": "Invalid response: {'success': False, 'error': {'code': 'INTERNAL_ERROR', 'message': 'An internal error occurred'}}",
+      "timestamp": "2026-01-25T16:27:14.633354"
+    },
+    {
+      "name": "User Registration",
+      "success": false,
+      "details": "Registration failed: {'success': False, 'error': {'code': 'INTERNAL_ERROR', 'message': 'An internal error occurred'}}",
+      "timestamp": "2026-01-25T16:27:14.770211"
+    },
+    {
+      "name": "Admin Login",
+      "success": false,
+      "details": "Admin login failed: {'success': False, 'error': {'code': 'INTERNAL_ERROR', 'message': 'An internal error occurred'}}",
+      "timestamp": "2026-01-25T16:27:14.860322"
+    },
+    {
+      "name": "Super Admin Login",
+      "success": false,
+      "details": "Super admin login failed: {'success': False, 'error': {'code': 'INTERNAL_ERROR', 'message': 'An internal error occurred'}}",
+      "timestamp": "2026-01-25T16:27:14.948965"
+    },
+    {
+      "name": "Get Current User",
+      "success": false,
+      "details": "No user token available",
+      "timestamp": "2026-01-25T16:27:14.948978"
+    }
+  ],
+  "failed_tests": [
+    {
+      "test": "Games List",
+      "error": "Invalid response: {'success': False, 'error': {'code': 'INTERNAL_ERROR', 'message': 'An internal error occurred'}}",
+      "response": null
+    },
+    {
+      "test": "User Registration",
+      "error": "Registration failed: {'success': False, 'error': {'code': 'INTERNAL_ERROR', 'message': 'An internal error occurred'}}",
+      "response": null
+    },
+    {
+      "test": "Admin Login",
+      "error": "Admin login failed: {'success': False, 'error': {'code': 'INTERNAL_ERROR', 'message': 'An internal error occurred'}}",
+      "response": null
+    },
+    {
+      "test": "Super Admin Login",
+      "error": "Super admin login failed: {'success': False, 'error': {'code': 'INTERNAL_ERROR', 'message': 'An internal error occurred'}}",
+      "response": null
+    },
+    {
+      "test": "Get Current User",
+      "error": "No user token available",
+      "response": null
+    }
+  ]
+}
