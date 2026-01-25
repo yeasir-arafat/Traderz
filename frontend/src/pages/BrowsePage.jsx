@@ -128,7 +128,7 @@ export default function BrowsePage() {
                 <SelectValue placeholder="All Games" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Games</SelectItem>
+                <SelectItem value="all">All Games</SelectItem>
                 {games.map((game) => (
                   <SelectItem key={game.id} value={game.id}>
                     {game.name}
