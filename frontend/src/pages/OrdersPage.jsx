@@ -134,11 +134,11 @@ export default function OrdersPage() {
                 <p className="text-muted-foreground mb-4">
                   Create a listing and start selling!
                 </p>
-                <Button onClick={() => window.location.href = '/sell'}>
+                <Button onClick={() => window.location.href = '/sell/new'}>
                   Create Listing
                 </Button>
               </div>
-            )}
+            )}s
           </TabsContent>
         )}
       </Tabs>

@@ -11,6 +11,11 @@ from app.schemas.misc import KycSubmitRequest, KycReviewRequest, KycSubmissionRe
 
 router = APIRouter(prefix="/kyc", tags=["KYC"])
 
+def _normalize_doc_type(value: str) -> str:
+    """Map frontend doc_type values to backend KycDocType enum values."""
+    m = {"national_id": "nid", "driving_license": "driving_licence"}
+    return m.get(value, value)
+
 
 @router.post("")
 async def submit_kyc(
@@ -19,8 +24,9 @@ async def submit_kyc(
     db: AsyncSession = Depends(get_db)
 ):
     """Submit KYC documents"""
+    doc_type = _normalize_doc_type(data.doc_type)
     submission = await kyc_service.submit_kyc(
-        db, user, data.doc_type, data.doc_front_url, data.doc_back_url, data.selfie_url
+        db, user, doc_type, data.doc_front_url, data.doc_back_url, data.selfie_url
     )
     return success_response(KycSubmissionResponse.model_validate(submission).model_dump())
 

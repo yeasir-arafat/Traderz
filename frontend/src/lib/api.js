@@ -3,6 +3,15 @@ import { useAuthStore } from '../store';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
+/** Build full URL for upload paths (e.g. /uploads/kyc/xxx) so images load from backend. */
+export function getUploadUrl(path) {
+  if (!path) return path;
+  if (typeof path !== 'string' || path.startsWith('http')) return path;
+  const base = (API_URL || '').replace(/\/$/, '');
+  return base ? `${base}${path.startsWith('/') ? path : '/' + path}` : path;
+}
+
+
 const api = axios.create({
   baseURL: `${API_URL}/api`,
   headers: {

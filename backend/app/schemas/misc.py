@@ -5,7 +5,7 @@ from uuid import UUID
 
 
 class KycSubmitRequest(BaseModel):
-    doc_type: str = Field(..., pattern="^(passport|driving_licence|nid|equivalent)$")
+    doc_type: str = Field(..., pattern="^(passport|driving_licence|driving_license|nid|national_id|equivalent)$")
     doc_front_url: str
     doc_back_url: Optional[str] = None
     selfie_url: Optional[str] = None
