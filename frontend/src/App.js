@@ -32,6 +32,12 @@ import PendingListingsPage from './pages/admin/PendingListingsPage';
 import PendingKycPage from './pages/admin/PendingKycPage';
 import DisputesPage from './pages/admin/DisputesPage';
 
+// Super Admin Pages
+import SuperAdminDashboardPage from './pages/superadmin/SuperAdminDashboardPage';
+import UsersManagementPage from './pages/superadmin/UsersManagementPage';
+import FinanceConsolePage from './pages/superadmin/FinanceConsolePage';
+import AuditLogsPage from './pages/superadmin/AuditLogsPage';
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
