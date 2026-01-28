@@ -249,6 +249,40 @@ function App() {
                     }
                   />
                   
+                  {/* Super Admin routes */}
+                  <Route
+                    path="/superadmin"
+                    element={
+                      <SuperAdminRoute>
+                        <SuperAdminDashboardPage />
+                      </SuperAdminRoute>
+                    }
+                  />
+                  <Route
+                    path="/superadmin/users"
+                    element={
+                      <SuperAdminRoute>
+                        <UsersManagementPage />
+                      </SuperAdminRoute>
+                    }
+                  />
+                  <Route
+                    path="/superadmin/finance"
+                    element={
+                      <SuperAdminRoute>
+                        <FinanceConsolePage />
+                      </SuperAdminRoute>
+                    }
+                  />
+                  <Route
+                    path="/superadmin/audit-logs"
+                    element={
+                      <SuperAdminRoute>
+                        <AuditLogsPage />
+                      </SuperAdminRoute>
+                    }
+                  />
+                  
                   {/* 404 */}
                   <Route path="*" element={<NotFoundPage />} />
                 </Routes>
