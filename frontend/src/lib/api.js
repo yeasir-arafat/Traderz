@@ -11,7 +11,6 @@ export function getUploadUrl(path) {
   return base ? `${base}${path.startsWith('/') ? path : '/' + path}` : path;
 }
 
-
 const api = axios.create({
   baseURL: `${API_URL}/api`,
   headers: {

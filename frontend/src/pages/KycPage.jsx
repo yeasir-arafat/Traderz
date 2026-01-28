@@ -15,7 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../components/ui/select';
-import { kycAPI, uploadAPI } from '../lib/api';
+import { kycAPI, uploadAPI, getUploadUrl } from '../lib/api';
 import { useAuthStore } from '../store';
 import { toast } from 'sonner';
 
@@ -24,6 +24,20 @@ const DOC_TYPES = [
   { value: 'passport', label: 'Passport' },
   { value: 'driving_license', label: 'Driving License' },
 ];
+
+// Allowed image types for KYC upload (must match backend)
+const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/heif', 'image/heic'];
+const ALLOWED_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp', '.heif', '.heic'];
+const ACCEPT_ATTR = '.jpg,.jpeg,.png,.webp,.heif,.heic,image/jpeg,image/png,image/webp,image/heif,image/heic';
+const ACCEPTED_HINT = 'JPG, PNG, JPEG, HEIF, WEBP (max 5MB)';
+
+function isAllowedImage(file) {
+  if (!file?.name && !file?.type) return false;
+  const ext = (file.name || '').toLowerCase().replace(/.*\./, '.');
+  if (ALLOWED_EXTENSIONS.includes(ext)) return true;
+  if (ALLOWED_IMAGE_TYPES.includes((file.type || '').toLowerCase())) return true;
+  return false;
+}
 
 const statusConfig = {
   approved: { icon: CheckCircle, color: 'text-green-500', bg: 'bg-green-500/10' },
@@ -69,20 +83,27 @@ export default function KycPage() {
     }
   };
   
+  const uploadKeyMap = { doc_front_url: 'front', doc_back_url: 'back', selfie_url: 'selfie' };
   const handleUpload = async (field, e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    
-    setUploading({ ...uploading, [field]: true });
+    if (!isAllowedImage(file)) {
+      toast.error(`Invalid file type. Image type can be: ${ACCEPTED_HINT.replace(' (max 5MB)', '')}.`);
+      e.target.value = '';
+      return;
+    }
+    const uploadKey = uploadKeyMap[field] ?? field;
+    setUploading((prev) => ({ ...prev, [uploadKey]: true }));
     try {
       const result = await uploadAPI.uploadKYC(file);
-      setFormData({ ...formData, [field]: result.url });
+      setFormData((prev) => ({ ...prev, [field]: result.url }));
       toast.success('Document uploaded');
     } catch (error) {
-      toast.error(error.message || 'Failed to upload document');
+      toast.error(error?.message || 'Failed to upload document');
     } finally {
-      setUploading({ ...uploading, [field]: false });
+      setUploading((prev) => ({ ...prev, [uploadKey]: false }));
     }
+    e.target.value = '';
   };
   
   const handleSubmit = async (e) => {
@@ -206,7 +227,7 @@ export default function KycPage() {
                   {formData.doc_front_url ? (
                     <div className="relative w-full h-40 rounded-lg overflow-hidden border">
                       <img 
-                        src={formData.doc_front_url} 
+                        src={getUploadUrl(formData.doc_front_url)} 
                         alt="Document Front" 
                         className="w-full h-full object-cover"
                       />
@@ -226,11 +247,12 @@ export default function KycPage() {
                         <>
                           <FileImage className="w-8 h-8 text-muted-foreground mb-2" />
                           <span className="text-sm text-muted-foreground">Upload front of document</span>
+                          <span className="text-xs text-muted-foreground/80 mt-1">{ACCEPTED_HINT}</span>
                         </>
                       )}
                       <input
                         type="file"
-                        accept="image/*"
+                        accept={ACCEPT_ATTR}
                         onChange={(e) => handleUpload('doc_front_url', e)}
                         className="hidden"
                         disabled={uploading.front}
@@ -248,7 +270,7 @@ export default function KycPage() {
                   {formData.doc_back_url ? (
                     <div className="relative w-full h-40 rounded-lg overflow-hidden border">
                       <img 
-                        src={formData.doc_back_url} 
+                        src={getUploadUrl(formData.doc_back_url)} 
                         alt="Document Back" 
                         className="w-full h-full object-cover"
                       />
@@ -268,11 +290,12 @@ export default function KycPage() {
                         <>
                           <FileImage className="w-8 h-8 text-muted-foreground mb-2" />
                           <span className="text-sm text-muted-foreground">Upload back of document</span>
+                          <span className="text-xs text-muted-foreground/80 mt-1">{ACCEPTED_HINT}</span>
                         </>
                       )}
                       <input
                         type="file"
-                        accept="image/*"
+                        accept={ACCEPT_ATTR}
                         onChange={(e) => handleUpload('doc_back_url', e)}
                         className="hidden"
                         disabled={uploading.back}
@@ -290,7 +313,7 @@ export default function KycPage() {
                   {formData.selfie_url ? (
                     <div className="relative w-full h-40 rounded-lg overflow-hidden border">
                       <img 
-                        src={formData.selfie_url} 
+                        src={getUploadUrl(formData.selfie_url)} 
                         alt="Selfie" 
                         className="w-full h-full object-cover"
                       />
@@ -310,11 +333,12 @@ export default function KycPage() {
                         <>
                           <FileImage className="w-8 h-8 text-muted-foreground mb-2" />
                           <span className="text-sm text-muted-foreground">Upload selfie holding your document</span>
+                          <span className="text-xs text-muted-foreground/80 mt-1">{ACCEPTED_HINT}</span>
                         </>
                       )}
                       <input
                         type="file"
-                        accept="image/*"
+                        accept={ACCEPT_ATTR}
                         onChange={(e) => handleUpload('selfie_url', e)}
                         className="hidden"
                         disabled={uploading.selfie}

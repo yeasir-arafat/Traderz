@@ -19,6 +19,8 @@ import ChatPage from './pages/ChatPage';
 import FAQPage from './pages/FAQPage';
 import NotFoundPage from './pages/NotFoundPage';
 import KycPage from './pages/KycPage';
+import NotificationsPage from './pages/NotificationsPage';
+import SellerProfilePage from './pages/SellerProfilePage';
 
 // Seller Pages
 import MyListingsPage from './pages/seller/MyListingsPage';
@@ -92,6 +94,7 @@ function App() {
                   <Route path="/" element={<HomePage />} />
                   <Route path="/browse" element={<BrowsePage />} />
                   <Route path="/listing/:id" element={<ListingDetailsPage />} />
+                  <Route path="/seller/:id" element={<SellerProfilePage />} />
                   <Route path="/faq" element={<FAQPage />} />
                   
                   {/* Protected routes */}
@@ -128,6 +131,14 @@ function App() {
                     }
                   />
                   <Route
+                    path="/notifications"
+                    element={
+                      <ProtectedRoute>
+                        <NotificationsPage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
                     path="/chat"
                     element={
                       <ProtectedRoute>
@@ -153,6 +164,14 @@ function App() {
                   />
                   
                   {/* Seller routes */}
+                  <Route
+                    path="/sell"
+                    element={
+                      <SellerRoute>
+                        <Navigate to="/my-listings" replace />
+                      </SellerRoute>
+                    }
+                  />
                   <Route
                     path="/my-listings"
                     element={

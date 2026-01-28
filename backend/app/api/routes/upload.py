@@ -18,23 +18,28 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/upload", tags=["Upload"])
 
-# Allowed extensions and MIME types
-ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp", ".gif"}
+# Allowed extensions and MIME types: jpg, png, jpeg, heif, webp
+ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp", ".heif", ".heic"}
 ALLOWED_MIME_TYPES = {
-    "image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif"
+    "image/jpeg", "image/jpg", "image/png", "image/webp", "image/heif", "image/heic"
 }
+ALLOWED_TYPES_HINT = "jpg, png, jpeg, heif, webp"
 MAX_FILE_SIZE = 5 * 1024 * 1024  # 5MB
 
 
-def validate_image_content(content: bytes, filename: str) -> bool:
+def validate_image_content(content: bytes, filename: str, ext: str) -> bool:
     """
-    Validate image content using Pillow.
-    Returns True if valid image, False otherwise.
+    Validate image content. Uses Pillow for common formats.
+    HEIF/HEIC: Pillow may not support; we allow if extension and MIME passed.
     """
+    ext_lower = ext.lower()
+    if ext_lower in (".heif", ".heic"):
+        # HEIF: Pillow doesn't support by default; trust extension + MIME checks
+        return True
     try:
         from PIL import Image
         img = Image.open(BytesIO(content))
-        img.verify()  # Verify it's a valid image
+        img.verify()
         return True
     except Exception as e:
         logger.warning(f"Image validation failed for {filename}: {e}")
@@ -67,7 +72,7 @@ async def _upload_file(file: UploadFile, folder: str, user_id: str):
     if ext not in ALLOWED_EXTENSIONS:
         raise AppException(
             "INVALID_FILE",
-            f"Invalid file type. Allowed: {', '.join(ALLOWED_EXTENSIONS)}"
+            f"Invalid file type. Image type can be: {ALLOWED_TYPES_HINT}."
         )
     
     # 2. Check MIME type from upload headers
@@ -75,7 +80,7 @@ async def _upload_file(file: UploadFile, folder: str, user_id: str):
     if content_type not in ALLOWED_MIME_TYPES:
         raise AppException(
             "INVALID_FILE",
-            "Invalid image file. MIME type not allowed."
+            f"Invalid image file. Image type can be: {ALLOWED_TYPES_HINT}."
         )
     
     # 3. Read content and check size
@@ -92,11 +97,11 @@ async def _upload_file(file: UploadFile, folder: str, user_id: str):
             "Empty file not allowed."
         )
     
-    # 4. Validate actual image content using Pillow
-    if not validate_image_content(content, file.filename or "unknown"):
+    # 4. Validate actual image content using Pillow (or allow HEIF by ext+MIME)
+    if not validate_image_content(content, file.filename or "unknown", ext):
         raise AppException(
             "INVALID_FILE",
-            "Invalid image file. Could not process image content."
+            f"Invalid image file. Image type can be: {ALLOWED_TYPES_HINT}."
         )
     
     # 5. Generate unique filename and save

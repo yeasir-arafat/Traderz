@@ -16,7 +16,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '../../components/ui/dialog';
-import { kycAPI } from '../../lib/api';
+import { kycAPI, getUploadUrl } from '../../lib/api';
 import { useAuthStore } from '../../store';
 import { toast } from 'sonner';
 
@@ -109,8 +109,11 @@ export default function PendingKycPage() {
   const formatDocType = (type) => {
     const types = {
       national_id: 'National ID',
+      nid: 'National ID',
       passport: 'Passport',
       driving_license: 'Driving License',
+      driving_licence: 'Driving License',
+      equivalent: 'Equivalent',
     };
     return types[type] || type;
   };
@@ -187,11 +190,11 @@ export default function PendingKycPage() {
                     <div className="flex flex-wrap gap-3">
                       {submission.doc_front_url && (
                         <div 
-                          className="w-24 h-24 rounded-lg bg-muted overflow-hidden cursor-pointer hover:ring-2 ring-primary transition-all"
+                          className="w-24 h-24 rounded-lg bg-muted overflow-hidden cursor-pointer hover:ring-2 ring-primary transition-all relative"
                           onClick={() => setViewingImage(submission.doc_front_url)}
                         >
                           <img 
-                            src={submission.doc_front_url} 
+                            src={getUploadUrl(submission.doc_front_url)} 
                             alt="Document Front"
                             className="w-full h-full object-cover"
                           />
@@ -207,7 +210,7 @@ export default function PendingKycPage() {
                           onClick={() => setViewingImage(submission.doc_back_url)}
                         >
                           <img 
-                            src={submission.doc_back_url} 
+                            src={getUploadUrl(submission.doc_back_url)} 
                             alt="Document Back"
                             className="w-full h-full object-cover"
                           />
@@ -220,7 +223,7 @@ export default function PendingKycPage() {
                           onClick={() => setViewingImage(submission.selfie_url)}
                         >
                           <img 
-                            src={submission.selfie_url} 
+                            src={getUploadUrl(submission.selfie_url)} 
                             alt="Selfie"
                             className="w-full h-full object-cover"
                           />
@@ -289,7 +292,7 @@ export default function PendingKycPage() {
             <div className="flex gap-2 justify-center">
               {reviewingKyc?.doc_front_url && (
                 <img 
-                  src={reviewingKyc.doc_front_url} 
+                  src={getUploadUrl(reviewingKyc.doc_front_url)} 
                   alt="Document Front"
                   className="w-32 h-32 object-cover rounded-lg cursor-pointer"
                   onClick={() => setViewingImage(reviewingKyc.doc_front_url)}
@@ -297,7 +300,7 @@ export default function PendingKycPage() {
               )}
               {reviewingKyc?.doc_back_url && (
                 <img 
-                  src={reviewingKyc.doc_back_url} 
+                  src={getUploadUrl(reviewingKyc.doc_back_url)} 
                   alt="Document Back"
                   className="w-32 h-32 object-cover rounded-lg cursor-pointer"
                   onClick={() => setViewingImage(reviewingKyc.doc_back_url)}
@@ -305,7 +308,7 @@ export default function PendingKycPage() {
               )}
               {reviewingKyc?.selfie_url && (
                 <img 
-                  src={reviewingKyc.selfie_url} 
+                  src={getUploadUrl(reviewingKyc.selfie_url)} 
                   alt="Selfie"
                   className="w-32 h-32 object-cover rounded-lg cursor-pointer"
                   onClick={() => setViewingImage(reviewingKyc.selfie_url)}
@@ -356,7 +359,7 @@ export default function PendingKycPage() {
       <Dialog open={!!viewingImage} onOpenChange={() => setViewingImage(null)}>
         <DialogContent className="max-w-3xl">
           <img 
-            src={viewingImage} 
+            src={getUploadUrl(viewingImage)} 
             alt="Document"
             className="w-full h-auto max-h-[80vh] object-contain"
           />
