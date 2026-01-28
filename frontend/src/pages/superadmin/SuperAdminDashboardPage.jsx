@@ -181,27 +181,55 @@ export default function SuperAdminDashboardPage() {
             <UserCog className="w-4 h-4 mr-2" />
             Users
           </Button>
+          <Button size="sm" onClick={() => navigate('/superadmin/orders')}>
+            <ShoppingCart className="w-4 h-4 mr-2" />
+            Orders
+          </Button>
           <Button size="sm" onClick={() => navigate('/superadmin/games-fees')}>
             <Layers className="w-4 h-4 mr-2" />
-            Games & Fees
+            Games
+          </Button>
+          <Button size="sm" onClick={() => navigate('/superadmin/withdrawals')}>
+            <Wallet className="w-4 h-4 mr-2" />
+            Withdrawals
           </Button>
           <Button size="sm" onClick={() => navigate('/superadmin/moderation')}>
             <Gavel className="w-4 h-4 mr-2" />
             Moderation
           </Button>
+          <Button size="sm" onClick={() => navigate('/superadmin/giftcards')}>
+            <DollarSign className="w-4 h-4 mr-2" />
+            Gift Cards
+          </Button>
           <Button size="sm" onClick={() => navigate('/superadmin/finance')}>
             <Wallet className="w-4 h-4 mr-2" />
             Finance
           </Button>
-          <Button size="sm" onClick={() => navigate('/superadmin/config')}>
-            <Settings className="w-4 h-4 mr-2" />
-            Config
-          </Button>
-          <Button size="sm" onClick={() => navigate('/superadmin/legal')}>
-            <ScrollText className="w-4 h-4 mr-2" />
-            Legal
+          <Button size="sm" variant="outline" onClick={() => navigate('/superadmin/system-health')}>
+            <Activity className="w-4 h-4 mr-2" />
+            Health
           </Button>
         </div>
+      </div>
+      
+      {/* Secondary Nav Row */}
+      <div className="flex flex-wrap gap-2 mb-6">
+        <Button size="sm" variant="outline" onClick={() => navigate('/superadmin/admin-scopes')}>
+          <Lock className="w-4 h-4 mr-2" />
+          Admin Scopes
+        </Button>
+        <Button size="sm" variant="outline" onClick={() => navigate('/superadmin/audit-logs')}>
+          <ScrollText className="w-4 h-4 mr-2" />
+          Audit Logs
+        </Button>
+        <Button size="sm" variant="outline" onClick={() => navigate('/superadmin/config')}>
+          <Settings className="w-4 h-4 mr-2" />
+          Config
+        </Button>
+        <Button size="sm" variant="outline" onClick={() => navigate('/superadmin/legal')}>
+          <ScrollText className="w-4 h-4 mr-2" />
+          Legal
+        </Button>
       </div>
       
       {/* KPI Cards - Top Row */}
