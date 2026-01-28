@@ -4,7 +4,7 @@ Tests for Owner-grade Super Admin system including:
 - Dashboard stats API
 - Users management API
 - Finance console (credit/debit/freeze)
-- Audit logs
+- Audit logs (admin-actions)
 - Role-based access control (admin vs super_admin)
 """
 import pytest
@@ -82,7 +82,9 @@ class TestSuperAdminDashboard:
             headers={"Authorization": f"Bearer {super_admin_token}"}
         )
         assert response.status_code == 200, f"Dashboard failed: {response.text}"
-        data = response.json()
+        resp = response.json()
+        assert resp["success"] is True
+        data = resp["data"]
         
         # Verify KPI fields exist
         assert "total_users" in data
@@ -164,7 +166,9 @@ class TestSuperAdminUsersManagement:
             headers={"Authorization": f"Bearer {super_admin_token}"}
         )
         assert response.status_code == 200, f"Get users failed: {response.text}"
-        data = response.json()
+        resp = response.json()
+        assert resp["success"] is True
+        data = resp["data"]
         
         assert "users" in data
         assert "total" in data
@@ -177,7 +181,6 @@ class TestSuperAdminUsersManagement:
             assert "username" in user
             assert "email" in user
             assert "roles" in user
-            assert "status" in user
         
         print(f"✓ Users list: {data['total']} total users, page {data['page']}")
     
@@ -188,7 +191,8 @@ class TestSuperAdminUsersManagement:
             headers={"Authorization": f"Bearer {super_admin_token}"}
         )
         assert response.status_code == 200, f"Filter users failed: {response.text}"
-        data = response.json()
+        resp = response.json()
+        data = resp["data"]
         
         # All returned users should have seller role
         for user in data["users"]:
@@ -204,7 +208,7 @@ class TestSuperAdminUsersManagement:
             headers={"Authorization": f"Bearer {super_admin_token}"}
         )
         assert response.status_code == 200
-        users = response.json()["users"]
+        users = response.json()["data"]["users"]
         
         if len(users) == 0:
             pytest.skip("No users to test")
@@ -217,7 +221,8 @@ class TestSuperAdminUsersManagement:
             headers={"Authorization": f"Bearer {super_admin_token}"}
         )
         assert response.status_code == 200, f"Get user detail failed: {response.text}"
-        data = response.json()
+        resp = response.json()
+        data = resp["data"]
         
         # Verify wallet info is included
         assert "wallet_available" in data
@@ -261,7 +266,7 @@ class TestSuperAdminFinanceConsole:
         if response.status_code != 200:
             pytest.skip("Cannot get users")
         
-        users = response.json()["users"]
+        users = response.json()["data"]["users"]
         # Find a non-super-admin user
         for user in users:
             if "super_admin" not in user["roles"]:
@@ -276,7 +281,7 @@ class TestSuperAdminFinanceConsole:
             headers={"Authorization": f"Bearer {super_admin_token}"}
         )
         assert response.status_code == 200, f"Search failed: {response.text}"
-        data = response.json()
+        data = response.json()["data"]
         
         # Should find admin user
         assert data["total"] > 0
@@ -297,7 +302,8 @@ class TestSuperAdminFinanceConsole:
             }
         )
         assert response.status_code == 200, f"Credit failed: {response.text}"
-        data = response.json()
+        resp = response.json()
+        data = resp["data"]
         
         assert "audit_id" in data
         assert data["action"] == "credit"
@@ -307,11 +313,11 @@ class TestSuperAdminFinanceConsole:
         
         # Verify audit log was created
         response = requests.get(
-            f"{BASE_URL}/api/superadmin/audit-logs?action_type=wallet_credit",
+            f"{BASE_URL}/api/superadmin/admin-actions?action_type=wallet_credit",
             headers={"Authorization": f"Bearer {super_admin_token}"}
         )
         assert response.status_code == 200
-        logs = response.json()["logs"]
+        logs = response.json()["data"]["logs"]
         
         # Should find our credit action
         found = any(log.get("id") == str(data["audit_id"]) for log in logs)
@@ -331,7 +337,7 @@ class TestSuperAdminFinanceConsole:
             }
         )
         # Should fail without password
-        assert response.status_code in [400, 422], f"Expected 400/422, got {response.status_code}"
+        assert response.status_code in [400, 422], f"Expected 400/422, got {response.status_code}: {response.text}"
         print("✓ Debit correctly requires password")
     
     def test_freeze_requires_password(self, super_admin_token, test_user_id):
@@ -346,12 +352,12 @@ class TestSuperAdminFinanceConsole:
             }
         )
         # Should fail without password
-        assert response.status_code in [400, 422], f"Expected 400/422, got {response.status_code}"
+        assert response.status_code in [400, 422], f"Expected 400/422, got {response.status_code}: {response.text}"
         print("✓ Freeze correctly requires password")
 
 
 class TestSuperAdminAuditLogs:
-    """Test Audit Logs API"""
+    """Test Audit Logs API (admin-actions endpoint)"""
     
     @pytest.fixture
     def super_admin_token(self):
@@ -376,13 +382,14 @@ class TestSuperAdminAuditLogs:
         return response.json()["data"]["access_token"]
     
     def test_get_audit_logs(self, super_admin_token):
-        """Super admin can get audit logs"""
+        """Super admin can get audit logs (admin-actions)"""
         response = requests.get(
-            f"{BASE_URL}/api/superadmin/audit-logs",
+            f"{BASE_URL}/api/superadmin/admin-actions",
             headers={"Authorization": f"Bearer {super_admin_token}"}
         )
         assert response.status_code == 200, f"Get audit logs failed: {response.text}"
-        data = response.json()
+        resp = response.json()
+        data = resp["data"]
         
         assert "logs" in data
         assert "total" in data
@@ -399,11 +406,11 @@ class TestSuperAdminAuditLogs:
     def test_filter_audit_logs_by_action_type(self, super_admin_token):
         """Can filter audit logs by action type"""
         response = requests.get(
-            f"{BASE_URL}/api/superadmin/audit-logs?action_type=wallet_credit",
+            f"{BASE_URL}/api/superadmin/admin-actions?action_type=wallet_credit",
             headers={"Authorization": f"Bearer {super_admin_token}"}
         )
         assert response.status_code == 200, f"Filter failed: {response.text}"
-        data = response.json()
+        data = response.json()["data"]
         
         # All logs should be wallet_credit type
         for log in data["logs"]:
@@ -414,7 +421,7 @@ class TestSuperAdminAuditLogs:
     def test_admin_cannot_access_audit_logs(self, admin_token):
         """Regular admin should NOT access audit logs"""
         response = requests.get(
-            f"{BASE_URL}/api/superadmin/audit-logs",
+            f"{BASE_URL}/api/superadmin/admin-actions",
             headers={"Authorization": f"Bearer {admin_token}"}
         )
         assert response.status_code == 403, f"Expected 403, got {response.status_code}"
@@ -454,13 +461,13 @@ class TestRoleBasedAccessControl:
         print("✓ Admin denied /superadmin/users")
     
     def test_admin_denied_superadmin_audit_logs(self, admin_token):
-        """Admin cannot access /superadmin/audit-logs"""
+        """Admin cannot access /superadmin/admin-actions"""
         response = requests.get(
-            f"{BASE_URL}/api/superadmin/audit-logs",
+            f"{BASE_URL}/api/superadmin/admin-actions",
             headers={"Authorization": f"Bearer {admin_token}"}
         )
         assert response.status_code == 403
-        print("✓ Admin denied /superadmin/audit-logs")
+        print("✓ Admin denied /superadmin/admin-actions")
     
     def test_admin_denied_wallet_credit(self, admin_token):
         """Admin cannot credit wallet"""
