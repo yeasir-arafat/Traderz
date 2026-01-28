@@ -192,6 +192,7 @@ class PlatformConfigUpdate(BaseModel):
     max_image_size_mb: Optional[int] = Field(None, ge=1, le=20)
     max_images_per_listing: Optional[int] = Field(None, ge=1, le=20)
     default_fee_percent: Optional[float] = Field(None, ge=0, le=50)
+    maintenance_mode: Optional[bool] = None
 
 
 class PlatformConfigResponse(BaseModel):
@@ -203,6 +204,7 @@ class PlatformConfigResponse(BaseModel):
     max_image_size_mb: int
     max_images_per_listing: int
     default_fee_percent: float
+    maintenance_mode: bool
 
 
 # ============== Legal Documents ==============

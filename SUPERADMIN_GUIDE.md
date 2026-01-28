@@ -107,7 +107,27 @@ All admin actions are recorded immutably with:
 
 **Ledger History**: View all wallet transactions
 
-### 4. Audit Logs (`/superadmin/audit-logs`)
+### 4. Platform Config (`/superadmin/config`)
+
+Manage core platform, currency, and listing settings:
+
+- **Currency**
+  - USD→BDT exchange rate
+  - Default platform fee percentage
+- **Protection Windows**
+  - Dispute window (hours) for buyers to open disputes after delivery
+  - Seller protection days (earnings held before release)
+- **Listing Rules**
+  - KYC required to become a seller (toggle)
+  - Listing approval required (toggle for admin review before going live)
+  - Max upload size (MB) for listing images
+  - Max images per listing
+- **Maintenance Mode**
+  - Toggle to put the platform into maintenance mode (front-end can show banners or restrict actions based on this flag)
+
+All config changes are recorded as `UPDATE_CONFIG` entries in the audit logs.
+
+### 5. Audit Logs (`/superadmin/audit-logs`)
 
 **View all admin actions** with:
 - Action type (approve, reject, ban, credit, etc.)
@@ -166,6 +186,11 @@ PATCH /api/superadmin/orders/:id/dispute-window
 ### Audit Logs
 ```
 GET /api/superadmin/admin-actions
+```
+### Platform Config
+```
+GET /api/superadmin/config
+PUT /api/superadmin/config
 ```
 
 ## Idempotency

@@ -4,7 +4,7 @@ import {
   Shield, Users, Package, FileCheck, AlertTriangle, ShoppingCart,
   Loader2, TrendingUp, TrendingDown, DollarSign, Wallet, Lock,
   Clock, CheckCircle, XCircle, Activity, Database, RefreshCw,
-  ChevronRight, Eye, UserCog, Settings, ScrollText
+  ChevronRight, Eye, UserCog, Settings, ScrollText, Layers, Gavel
 } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
@@ -181,9 +181,25 @@ export default function SuperAdminDashboardPage() {
             <UserCog className="w-4 h-4 mr-2" />
             Users
           </Button>
+          <Button size="sm" onClick={() => navigate('/superadmin/games-fees')}>
+            <Layers className="w-4 h-4 mr-2" />
+            Games & Fees
+          </Button>
+          <Button size="sm" onClick={() => navigate('/superadmin/moderation')}>
+            <Gavel className="w-4 h-4 mr-2" />
+            Moderation
+          </Button>
+          <Button size="sm" onClick={() => navigate('/superadmin/finance')}>
+            <Wallet className="w-4 h-4 mr-2" />
+            Finance
+          </Button>
           <Button size="sm" onClick={() => navigate('/superadmin/config')}>
             <Settings className="w-4 h-4 mr-2" />
             Config
+          </Button>
+          <Button size="sm" onClick={() => navigate('/superadmin/legal')}>
+            <ScrollText className="w-4 h-4 mr-2" />
+            Legal
           </Button>
         </div>
       </div>

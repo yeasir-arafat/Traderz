@@ -564,7 +564,9 @@ async def get_config(
         "listing_approval_required": config_dict.get("listing_approval_required", "true").lower() == "true",
         "max_image_size_mb": int(config_dict.get("max_image_size_mb", "5")),
         "max_images_per_listing": int(config_dict.get("max_images_per_listing", "5")),
-        "default_fee_percent": float(config_dict.get("default_fee_percent", "5"))
+        "default_fee_percent": float(config_dict.get("default_fee_percent", "5")),
+        "maintenance_mode": config_dict.get("maintenance_mode", "false").lower() == "true",
+        
     })
 
 

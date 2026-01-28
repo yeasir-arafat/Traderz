@@ -61,10 +61,29 @@ async def update_profile(db: AsyncSession, user: User, data: ProfileUpdateReques
 
 
 async def become_seller(db: AsyncSession, user: User) -> User:
-    """Add seller role to user"""
+    """Add seller role to user.
+
+    Business rule: user must have a completed profile before becoming a seller.
+    """
     if "seller" in user.roles:
         raise AppException(ErrorCodes.CONFLICT, "Already a seller")
     
+    # Ensure required profile fields are filled in before allowing seller role
+    required_fields = {
+        "full_name": user.full_name,
+        "phone_number": user.phone_number,
+        "address_line1": user.address_line1,
+        "city": user.city,
+        "country": user.country,
+        "postal_code": user.postal_code,
+    }
+    missing = [name for name, value in required_fields.items() if not value]
+    if missing:
+        raise AppException(
+            ErrorCodes.VALIDATION_ERROR,
+            "Please complete your profile before becoming a seller",
+        )
+        
     user.roles = user.roles + ["seller"]
     await db.commit()
     await db.refresh(user)

@@ -37,6 +37,10 @@ import SuperAdminDashboardPage from './pages/superadmin/SuperAdminDashboardPage'
 import UsersManagementPage from './pages/superadmin/UsersManagementPage';
 import FinanceConsolePage from './pages/superadmin/FinanceConsolePage';
 import AuditLogsPage from './pages/superadmin/AuditLogsPage';
+import LegalPage from './pages/superadmin/LegalPage';
+import GamesFeesPage from './pages/superadmin/GamesFeesPage';
+import ModerationPage from './pages/superadmin/ModerationPage';
+
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -267,6 +271,14 @@ function App() {
                     }
                   />
                   <Route
+                    path="/superadmin/config"
+                    element={
+                      <SuperAdminRoute>
+                        <ConfigPage />
+                      </SuperAdminRoute>
+                    }
+                  />
+                  <Route
                     path="/superadmin/finance"
                     element={
                       <SuperAdminRoute>
@@ -282,7 +294,30 @@ function App() {
                       </SuperAdminRoute>
                     }
                   />
-                  
+                  <Route
+                    path="/superadmin/games-fees"
+                    element={
+                      <SuperAdminRoute>
+                        <GamesFeesPage />
+                      </SuperAdminRoute>
+                    }
+                  />
+                  <Route
+                    path="/superadmin/moderation"
+                    element={
+                      <SuperAdminRoute>
+                        <ModerationPage />
+                      </SuperAdminRoute>
+                    }
+                  />
+                  <Route
+                    path="/superadmin/legal"
+                    element={
+                      <SuperAdminRoute>
+                        <LegalPage />
+                      </SuperAdminRoute>
+                    }
+                  />
                   {/* 404 */}
                   <Route path="*" element={<NotFoundPage />} />
                 </Routes>

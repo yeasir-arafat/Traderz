@@ -79,6 +79,25 @@ export default function ProfilePage() {
   };
   
   const handleBecomeSeller = async () => {
+    // Require basic profile fields before calling API
+    const missingFields = [];
+    if (!user.full_name) missingFields.push('full name');
+    if (!user.phone_number) missingFields.push('phone number');
+    if (!user.address_line1) missingFields.push('address');
+    if (!user.city) missingFields.push('city');
+    if (!user.country) missingFields.push('country');
+    if (!user.postal_code) missingFields.push('postal code');
+
+    if (missingFields.length > 0) {
+      toast.error(
+        `Please complete your profile before becoming a seller. Missing: ${missingFields.join(
+          ', '
+        )}`
+      );
+      setEditing(true);
+      return;
+    }
+    
     try {
       const updatedUser = await usersAPI.becomeSeller();
       updateUser(updatedUser);
