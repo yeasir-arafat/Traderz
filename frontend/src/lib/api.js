@@ -182,10 +182,59 @@ export const adminAPI = {
 
 // Super Admin API
 export const superAdminAPI = {
+  // Dashboard
+  getDashboard: () => api.get('/superadmin/dashboard'),
+  getSystemHealth: () => api.get('/superadmin/system-health'),
+  getAdminActions: (params) => api.get('/superadmin/admin-actions', { params }),
+  
+  // Legacy stats
   getStats: () => api.get('/superadmin/stats'),
   getFinance: () => api.get('/superadmin/finance'),
   getOrders: (params) => api.get('/superadmin/orders', { params }),
+  
+  // Admin Management
+  getAdmins: (params) => api.get('/superadmin/admins', { params }),
+  createAdmin: (data) => api.post('/superadmin/admins', data),
+  toggleAdmin: (id, data) => api.patch(`/superadmin/admins/${id}`, data),
+  
+  // User Management
   getUsers: (params) => api.get('/superadmin/users', { params }),
+  getUserDetail: (id) => api.get(`/superadmin/users/${id}`),
+  updateUserStatus: (id, data) => api.patch(`/superadmin/users/${id}/status`, data),
+  updateUserRoles: (id, data) => api.patch(`/superadmin/users/${id}/roles`, data),
+  forceLogout: (id, reason) => api.post(`/superadmin/users/${id}/force-logout?reason=${encodeURIComponent(reason)}`),
+  unlockProfile: (id, data) => api.post(`/superadmin/users/${id}/unlock-profile`, data),
+  
+  // Wallet / Finance
+  creditWallet: (data, idempotencyKey) => api.post('/superadmin/wallet/credit', data, {
+    headers: idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : {}
+  }),
+  debitWallet: (data, idempotencyKey) => api.post('/superadmin/wallet/debit', data, {
+    headers: idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : {}
+  }),
+  freezeFunds: (data, idempotencyKey) => api.post('/superadmin/wallet/freeze', data, {
+    headers: idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : {}
+  }),
+  unfreezeFunds: (data, idempotencyKey) => api.post('/superadmin/wallet/unfreeze', data, {
+    headers: idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : {}
+  }),
+  getUserLedger: (userId, params) => api.get('/superadmin/wallet/ledger', { params: { user_id: userId, ...params } }),
+  
+  // Order Overrides
+  forceRefund: (orderId, data) => api.post(`/superadmin/orders/${orderId}/force-refund`, data),
+  forceComplete: (orderId, data) => api.post(`/superadmin/orders/${orderId}/force-complete`, data),
+  extendDisputeWindow: (orderId, data) => api.patch(`/superadmin/orders/${orderId}/dispute-window`, data),
+  
+  // Content Moderation
+  hideListing: (id, data) => api.patch(`/superadmin/listings/${id}/status`, data),
+  hideMessage: (id, data) => api.patch(`/superadmin/messages/${id}/hide`, data),
+  
+  // Platform Config
+  getConfig: () => api.get('/superadmin/config'),
+  updateConfig: (data) => api.put('/superadmin/config', data),
+  
+  // Legal Documents
+  updateLegal: (data) => api.put('/superadmin/legal', data),
 };
 
 // Gift Cards API
