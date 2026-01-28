@@ -21,8 +21,9 @@ from app.models.giftcard import GiftCard
 from app.models.conversation import Message
 from app.models.admin_action import (
     AdminAction, AdminActionType, TargetType, 
-    ConfirmationMethod, LegalDocument, UserSession
+    ConfirmationMethod, LegalDocument
 )
+from app.models.user_session import UserSession
 from app.core.security import verify_password, get_password_hash, validate_password
 from app.core.errors import AppException
 from app.core.responses import ErrorCodes
