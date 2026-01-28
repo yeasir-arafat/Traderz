@@ -317,11 +317,11 @@ class TestSuperAdminFinanceConsole:
             headers={"Authorization": f"Bearer {super_admin_token}"}
         )
         assert response.status_code == 200
-        logs = response.json()["data"]["logs"]
+        actions = response.json()["data"]["actions"]
         
         # Should find our credit action
-        found = any(log.get("id") == str(data["audit_id"]) for log in logs)
-        assert found or len(logs) > 0, "Audit log not found"
+        found = any(log.get("id") == str(data["audit_id"]) for log in actions)
+        assert found or len(actions) > 0, "Audit log not found"
         print("✓ Audit log created for wallet credit")
     
     def test_debit_requires_password(self, super_admin_token, test_user_id):
@@ -391,12 +391,12 @@ class TestSuperAdminAuditLogs:
         resp = response.json()
         data = resp["data"]
         
-        assert "logs" in data
+        assert "actions" in data
         assert "total" in data
         assert "page" in data
         
-        if len(data["logs"]) > 0:
-            log = data["logs"][0]
+        if len(data["actions"]) > 0:
+            log = data["actions"][0]
             assert "id" in log
             assert "action_type" in log
             assert "created_at" in log
@@ -412,11 +412,11 @@ class TestSuperAdminAuditLogs:
         assert response.status_code == 200, f"Filter failed: {response.text}"
         data = response.json()["data"]
         
-        # All logs should be wallet_credit type
-        for log in data["logs"]:
-            assert log["action_type"] == "wallet_credit"
+        # All actions should be wallet_credit type
+        for action in data["actions"]:
+            assert action["action_type"] == "wallet_credit"
         
-        print(f"✓ Filtered audit logs by wallet_credit: {len(data['logs'])} entries")
+        print(f"✓ Filtered audit logs by wallet_credit: {len(data['actions'])} entries")
     
     def test_admin_cannot_access_audit_logs(self, admin_token):
         """Regular admin should NOT access audit logs"""
