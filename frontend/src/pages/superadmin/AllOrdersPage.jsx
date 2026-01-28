@@ -109,12 +109,12 @@ export default function AllOrdersPage() {
                 />
               </div>
             </div>
-            <Select value={statusFilter} onValueChange={(val) => { setStatusFilter(val); setPage(1); }}>
+            <Select value={statusFilter || 'all'} onValueChange={(val) => { setStatusFilter(val === 'all' ? '' : val); setPage(1); }}>
               <SelectTrigger className="w-[180px]" data-testid="status-filter">
                 <SelectValue placeholder="All Statuses" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Statuses</SelectItem>
+                <SelectItem value="all">All Statuses</SelectItem>
                 <SelectItem value="pending">Pending</SelectItem>
                 <SelectItem value="paid">Paid</SelectItem>
                 <SelectItem value="delivered">Delivered</SelectItem>
