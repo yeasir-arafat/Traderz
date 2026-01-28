@@ -1,147 +1,187 @@
-# PlayTraderz - Game Account Marketplace PRD
+# PlayTraderz - Game Account Marketplace
 
-## Original Problem Statement
-Create a full game account marketplace with:
-- Wallet/escrow system
-- Real-time chat
-- Seller levels
-- Super admin controls
-- KYC verification
-- Multi-currency support (USD/BDT)
-- Gift cards
-- Notifications
-- FAQ system
+## Product Overview
+A full-stack game account marketplace with wallet/escrow system, real-time chat, seller levels, KYC, multi-currency support, gift cards, notifications, and comprehensive admin/super admin panels.
 
-## Architecture
+## Tech Stack
+- **Frontend**: React (Vite), Tailwind CSS, Zustand, React Query, Recharts
+- **Backend**: FastAPI, SQLAlchemy (async), PostgreSQL (Neon)
+- **Auth**: JWT + Firebase Social Login (Google/Facebook)
+- **File Storage**: Local filesystem (production: S3 recommended)
 
-### Tech Stack
-- **Frontend**: React + Tailwind CSS + shadcn/ui + Zustand + React Query + Recharts
-- **Backend**: FastAPI + SQLAlchemy 2.x (async) + PostgreSQL (Neon)
-- **Auth**: JWT + Firebase (Google/Facebook social login)
-- **File Storage**: Local /uploads directory
-- **Background Jobs**: APScheduler (auto-complete orders, release seller earnings)
-- **Real-time**: WebSocket for chat
+---
 
-### Key Components
-- Modular backend structure with separation of concerns
-- Ledger-based wallet (immutable entries)
-- State machine for order management
-- Role-based access control (buyer, seller, admin, super_admin)
-- Immutable audit logs for all admin actions
+## Implemented Features
 
-## What's Been Implemented
+### Core Marketplace (Complete)
+- User registration/login with email and social auth
+- Browse listings with filters (game, platform, price)
+- Listing detail pages with account info
+- Wallet system with escrow
+- Order flow: Create → Pay → Deliver → Complete/Dispute
+- Real-time chat via WebSocket
 
-### January 28, 2026
+### Seller Features (Complete)
+- Create/edit listings with images
+- Seller dashboard with sales stats
+- Seller levels (Bronze/Silver/Gold/Platinum/Diamond)
+- KYC submission for verification
 
-#### Owner-Grade Super Admin System ✅
-Complete "owner-grade" Super Admin system with:
+### Admin Features (Complete)
+- Listing review and approval
+- KYC review
+- Admin dashboard with pending items
 
-**Security Guardrails:**
-- Step-up confirmation for dangerous actions (password re-entry)
-- Typed confirm phrase required for large amounts (≥$1,000)
-- Immutable audit logs with IP address and user agent tracking
-- Idempotency key support for wallet operations
+### Super Admin System V2 (Complete - Jan 28, 2026)
+All modules implemented with audit logging and step-up confirmation:
 
-**Super Admin Dashboard (`/superadmin`):**
-- KPI cards: Total Users, Sellers, Active Listings, Pending Listings, Pending KYC, Disputes, Orders in Delivery, Platform Earnings (7d)
-- Finance Overview: Deposits, Withdrawals, Escrow Held, Seller Pending, Frozen Funds, Platform Fees (all-time & 30d)
-- Charts: Orders over time (14 days), Revenue over time (14 days), Listing Status distribution, KYC Status distribution
-- Action Queues: Pending Listings, Pending KYC, Recent Disputes
-- System Health: Database connection status, Scheduler status with job schedules
+1. **Games & Fees Management** ✅
+   - Create/edit games with buyer_note_html
+   - Toggle game active status
+   - Platform fee rules
 
-**Users Management (`/superadmin/users`):**
-- Search and filter users by role, status, KYC status
-- View user details with wallet balances and order/listing counts
-- Ban/Unban users with reason
-- Edit user roles (promote/demote) with password confirmation
-- Force logout (revoke all sessions)
-- Unlock profile for editing after KYC approval
+2. **Order Management** ✅
+   - View all orders with search/filter
+   - Status filter (pending, paid, delivered, etc.)
+   - Escrow breakdown view
 
-**Finance Console (`/superadmin/finance`):**
-- Search and select users
-- View user wallet balances (Available, Pending, Frozen)
-- Credit wallet (admin deposit)
-- Debit wallet (requires password, large amounts need "CONFIRM DEBIT")
-- Freeze funds (requires password, large amounts need "CONFIRM FREEZE")
-- Unfreeze funds
-- View user's ledger history
+3. **Withdrawals Management** ✅
+   - Review pending withdrawal requests
+   - Approve/Reject with mandatory reason
+   - Admin notes and audit trail
 
-**Audit Logs (`/superadmin/audit-logs`):**
-- View all admin actions
-- Filter by action type and target type
-- See actor role, IP address, timestamp
-- View action details (reason, before/after snapshots)
+4. **Moderation** ✅
+   - Hide listings with reason
+   - Suspend sellers (hides all their listings)
+   - Soft-hide chat messages
 
-**API Endpoints:**
-- GET `/api/superadmin/dashboard` - Dashboard stats
-- GET `/api/superadmin/system-health` - System health
-- GET `/api/superadmin/admin-actions` - Audit logs
-- GET/POST `/api/superadmin/admins` - Admin management
-- GET `/api/superadmin/users` - User list
-- GET `/api/superadmin/users/:id` - User detail
-- PATCH `/api/superadmin/users/:id/status` - Ban/unban
-- PATCH `/api/superadmin/users/:id/roles` - Role management
-- POST `/api/superadmin/users/:id/force-logout` - Force logout
-- POST `/api/superadmin/users/:id/unlock-profile` - Unlock profile
-- POST `/api/superadmin/wallet/credit|debit|freeze|unfreeze` - Wallet ops
-- GET `/api/superadmin/wallet/ledger` - User ledger
+5. **Gift Card Management** ✅
+   - Generate 16-digit numeric codes
+   - Single/bulk generation (1-100)
+   - Deactivate with reason
+   - Status filter (active/redeemed/deactivated)
+   - Export CSV
 
-### January 25, 2026
+6. **System Health** ✅
+   - Database connection status
+   - Scheduler status
+   - Scheduled jobs list
 
-#### P0 Security Fixes ✅
-- Firebase credentials loaded from environment variables
-- Strict CORS policy (configurable origins)
-- Pillow-based image validation on uploads
-- WebSocket with JWT authentication
-- APScheduler for background jobs
+7. **Admin Permission Scopes** ✅
+   - Granular scopes: LISTINGS_REVIEW, KYC_REVIEW, DISPUTE_RESOLVE, FAQ_EDIT, FINANCE_VIEW, FINANCE_ACTION
+   - One-click presets: Moderator, KYC Reviewer, Content Admin, Ops Admin
+   - Super admin bypasses all scopes
 
-#### P1 Admin Panel ✅
-- Admin Dashboard, Pending Listings, KYC Review, Disputes
+---
 
-#### P1 Seller Pages ✅
-- My Listings, Create/Edit Listing
+## API Endpoints
 
-#### KYC System ✅
-- KYC submission page with document upload
+### Super Admin Endpoints
+- `GET /api/superadmin/dashboard` - Comprehensive stats
+- `GET /api/superadmin/orders` - All orders with filtering
+- `GET /api/superadmin/withdrawals` - Withdrawal requests
+- `POST /api/superadmin/withdrawals/{id}/process` - Approve/reject
+- `GET /api/superadmin/giftcards` - List gift cards
+- `POST /api/superadmin/giftcards/generate` - Generate new cards
+- `POST /api/superadmin/giftcards/{id}/deactivate` - Deactivate card
+- `GET /api/superadmin/admins/{id}/scopes` - Get admin scopes
+- `PUT /api/superadmin/admins/{id}/scopes` - Update scopes
+- `POST /api/superadmin/admins/{id}/scopes/preset` - Apply preset
+- `POST /api/superadmin/users/{id}/suspend-seller` - Suspend seller
+- `GET /api/superadmin/system-health` - System health check
 
-#### Backend Services ✅
-- All core services fully implemented
+---
 
-## Prioritized Backlog
+## Database Schema (Key Tables)
 
-### P0 - Critical ✅ DONE
-- [x] Security fixes
-- [x] Background jobs scheduler
-- [x] Admin panel
-- [x] Seller pages
-- [x] **Super Admin System** (Owner-grade controls)
+### Gift Cards
+```sql
+CREATE TABLE giftcards (
+  id UUID PRIMARY KEY,
+  code VARCHAR(50) UNIQUE NOT NULL,      -- 16-digit numeric
+  amount_usd FLOAT NOT NULL,
+  status VARCHAR(20) DEFAULT 'active',   -- active|redeemed|deactivated
+  redeemed_by UUID REFERENCES users(id),
+  redeemed_at TIMESTAMP,
+  created_by UUID REFERENCES users(id),
+  created_at TIMESTAMP,
+  expires_at TIMESTAMP                    -- Optional, null = no expiry
+);
+```
 
-### P1 - High Priority
-- [ ] Real-time chat WebSocket integration in frontend
-- [ ] Notifications page (frontend)
-- [ ] Seller public profile page
-- [ ] Review system after order completion
-- [ ] Email notifications (SendGrid)
+### Withdrawal Requests
+```sql
+CREATE TABLE withdrawal_requests (
+  id UUID PRIMARY KEY,
+  user_id UUID REFERENCES users(id),
+  amount_usd FLOAT NOT NULL,
+  payment_method VARCHAR(50),
+  payment_details TEXT,
+  status VARCHAR(20) DEFAULT 'pending',  -- pending|approved|rejected|cancelled
+  processed_by UUID,
+  processed_at TIMESTAMP,
+  rejection_reason TEXT,
+  admin_notes TEXT,
+  ledger_entry_id UUID REFERENCES wallet_ledger(id)
+);
+```
 
-### P2 - Medium Priority
-- [ ] FAQ management (admin)
-- [ ] Gift card creation (admin)
-- [ ] Admin user management via UI
-- [ ] Fee rules configuration via UI
-- [ ] Password change/reset pages
+---
 
-### P3 - Nice to Have
-- [ ] FCM push notifications
-- [ ] S3 file storage migration
-- [ ] Image optimization
-- [ ] Advanced search filters
-- [ ] Analytics dashboard
+## Test Credentials
+- **Super Admin**: super@admin.com / admin12
+- **Admin**: admin@admin.com / admin12
 
-## Seeded Accounts
-- **Super Admin**: super@admin.com / admin12 (full platform control)
-- **Admin**: admin@admin.com / admin12 (moderation only)
+---
 
-## Known Mocked Features
-- **Wallet deposits**: No real payment gateway (mock deposit)
-- **Wallet withdrawals**: No real payout processing
-- **File storage**: Local filesystem (not cloud S3)
+## Backlog / Future Tasks
+
+### P1 (High Priority)
+- [ ] Connect ChatPage.jsx to WebSocket backend
+- [ ] Build notifications page/UI
+- [ ] Build seller public profile page
+- [ ] Display buyer_note_html on listing detail pages
+
+### P2 (Medium Priority)
+- [ ] Password recovery flow (reset pages, email sending)
+- [ ] Integrate real email service (SendGrid)
+- [ ] Implement content reporting/flagging system
+- [ ] Admin scope enforcement on frontend (hide buttons when scope missing)
+- [ ] Admin scope enforcement on backend (403 INSUFFICIENT_SCOPE)
+
+### P3 (Nice to Have)
+- [ ] Gift card expiration handling
+- [ ] Multi-currency support expansion
+- [ ] Advanced analytics dashboard
+- [ ] Setup Alembic for database migrations
+
+---
+
+## Known Limitations
+- Wallet deposits/withdrawals not connected to real payment gateway (mocked)
+- File storage uses local filesystem (not cloud S3)
+- Database migrations applied via direct SQL (no Alembic)
+
+---
+
+## Architecture Notes
+```
+/app/
+├── backend/
+│   ├── app/
+│   │   ├── api/routes/     # FastAPI route handlers
+│   │   ├── core/           # Config, database, security
+│   │   ├── models/         # SQLAlchemy models
+│   │   ├── schemas/        # Pydantic schemas
+│   │   └── services/       # Business logic
+│   └── requirements.txt
+└── frontend/
+    ├── src/
+    │   ├── components/     # Reusable UI components
+    │   ├── pages/          # Route pages
+    │   ├── lib/api.js      # API client
+    │   └── store/          # Zustand state
+    └── package.json
+```
+
+Last Updated: January 28, 2026
