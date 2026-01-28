@@ -107,7 +107,11 @@ class UserResponse(BaseModel):
     total_reviews: int
     is_active: bool
     is_verified: bool
+    status: str = "active"
+    status_reason: Optional[str] = None
+    profile_unlocked: bool = False
     created_at: datetime
+    last_login_at: Optional[datetime] = None
 
     class Config:
         from_attributes = True
