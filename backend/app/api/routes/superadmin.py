@@ -722,3 +722,255 @@ async def get_stats(
             select(func.count(Listing.id)).where(Listing.status == ListingStatus.APPROVED)
         )).scalar() or 0
     })
+
+
+# ==================== ALL ORDERS VIEW ====================
+
+@router.get("/orders")
+async def get_all_orders(
+    request: Request,
+    status: Optional[str] = None,
+    q: Optional[str] = None,
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
+    admin: User = Depends(require_super_admin),
+    db: AsyncSession = Depends(get_db)
+):
+    """Get all orders with filtering"""
+    ip, ua = get_request_info(request)
+    service = SuperAdminService(db, admin, ip, ua)
+    orders, total = await service.get_all_orders(
+        status=status,
+        q=q,
+        page=page,
+        page_size=page_size
+    )
+    
+    return success_response({
+        "orders": orders,
+        "total": total,
+        "page": page,
+        "page_size": page_size
+    })
+
+
+# ==================== WITHDRAWALS MANAGEMENT ====================
+
+@router.get("/withdrawals")
+async def get_withdrawal_requests(
+    request: Request,
+    status: Optional[str] = None,
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
+    admin: User = Depends(require_super_admin),
+    db: AsyncSession = Depends(get_db)
+):
+    """Get withdrawal requests"""
+    ip, ua = get_request_info(request)
+    service = SuperAdminService(db, admin, ip, ua)
+    requests, total = await service.get_withdrawal_requests(
+        status=status,
+        page=page,
+        page_size=page_size
+    )
+    
+    return success_response({
+        "requests": requests,
+        "total": total,
+        "page": page,
+        "page_size": page_size
+    })
+
+
+class ProcessWithdrawalRequest(BaseModel):
+    action: str = Field(..., pattern="^(approve|reject)$")
+    admin_password: str
+    rejection_reason: Optional[str] = None
+    admin_notes: Optional[str] = None
+
+
+@router.post("/withdrawals/{withdrawal_id}/process")
+async def process_withdrawal(
+    request: Request,
+    withdrawal_id: UUID,
+    data: ProcessWithdrawalRequest,
+    admin: User = Depends(require_super_admin),
+    db: AsyncSession = Depends(get_db)
+):
+    """Approve or reject a withdrawal request"""
+    ip, ua = get_request_info(request)
+    service = SuperAdminService(db, admin, ip, ua)
+    result = await service.process_withdrawal(
+        withdrawal_id=withdrawal_id,
+        action=data.action,
+        admin_password=data.admin_password,
+        rejection_reason=data.rejection_reason,
+        admin_notes=data.admin_notes
+    )
+    return success_response(result)
+
+
+# ==================== GIFT CARD MANAGEMENT ====================
+
+class GenerateGiftCardsRequest(BaseModel):
+    count: int = Field(..., ge=1, le=100)
+    value_usd: float = Field(..., gt=0, le=10000)
+
+
+@router.post("/giftcards/generate")
+async def generate_gift_cards(
+    request: Request,
+    data: GenerateGiftCardsRequest,
+    admin: User = Depends(require_super_admin),
+    db: AsyncSession = Depends(get_db)
+):
+    """Generate one or more gift cards"""
+    ip, ua = get_request_info(request)
+    service = SuperAdminService(db, admin, ip, ua)
+    cards = await service.generate_gift_cards(
+        count=data.count,
+        value_usd=data.value_usd
+    )
+    return success_response({"cards": cards, "count": len(cards)})
+
+
+@router.get("/giftcards")
+async def get_gift_cards(
+    request: Request,
+    status: Optional[str] = None,
+    code: Optional[str] = None,
+    page: int = Query(1, ge=1),
+    page_size: int = Query(50, ge=1, le=100),
+    admin: User = Depends(require_super_admin),
+    db: AsyncSession = Depends(get_db)
+):
+    """Get gift cards with filtering"""
+    ip, ua = get_request_info(request)
+    service = SuperAdminService(db, admin, ip, ua)
+    cards, total = await service.get_gift_cards(
+        status=status,
+        code_search=code,
+        page=page,
+        page_size=page_size
+    )
+    
+    return success_response({
+        "cards": cards,
+        "total": total,
+        "page": page,
+        "page_size": page_size
+    })
+
+
+class DeactivateGiftCardRequest(BaseModel):
+    reason: str = Field(..., min_length=5)
+
+
+@router.post("/giftcards/{card_id}/deactivate")
+async def deactivate_gift_card(
+    request: Request,
+    card_id: UUID,
+    data: DeactivateGiftCardRequest,
+    admin: User = Depends(require_super_admin),
+    db: AsyncSession = Depends(get_db)
+):
+    """Deactivate a gift card"""
+    ip, ua = get_request_info(request)
+    service = SuperAdminService(db, admin, ip, ua)
+    result = await service.deactivate_gift_card(card_id, data.reason)
+    return success_response(result)
+
+
+# ==================== ADMIN PERMISSION SCOPES ====================
+
+@router.get("/admins/{admin_id}/scopes")
+async def get_admin_scopes(
+    request: Request,
+    admin_id: UUID,
+    user: User = Depends(require_super_admin),
+    db: AsyncSession = Depends(get_db)
+):
+    """Get admin permission scopes"""
+    ip, ua = get_request_info(request)
+    service = SuperAdminService(db, user, ip, ua)
+    result = await service.get_admin_scopes(admin_id)
+    return success_response(result)
+
+
+class UpdateAdminScopesRequest(BaseModel):
+    scopes: List[str]
+    admin_password: str
+
+
+@router.put("/admins/{admin_id}/scopes")
+async def update_admin_scopes(
+    request: Request,
+    admin_id: UUID,
+    data: UpdateAdminScopesRequest,
+    user: User = Depends(require_super_admin),
+    db: AsyncSession = Depends(get_db)
+):
+    """Update admin permission scopes"""
+    ip, ua = get_request_info(request)
+    service = SuperAdminService(db, user, ip, ua)
+    result = await service.update_admin_scopes(
+        admin_id=admin_id,
+        scopes=data.scopes,
+        admin_password=data.admin_password
+    )
+    return success_response(result)
+
+
+class ApplyScopePresetRequest(BaseModel):
+    preset: str = Field(..., pattern="^(moderator|kyc_reviewer|content_admin|ops_admin)$")
+    admin_password: str
+
+
+@router.post("/admins/{admin_id}/scopes/preset")
+async def apply_scope_preset(
+    request: Request,
+    admin_id: UUID,
+    data: ApplyScopePresetRequest,
+    user: User = Depends(require_super_admin),
+    db: AsyncSession = Depends(get_db)
+):
+    """Apply a preset scope configuration"""
+    ip, ua = get_request_info(request)
+    service = SuperAdminService(db, user, ip, ua)
+    result = await service.apply_scope_preset(
+        admin_id=admin_id,
+        preset=data.preset,
+        admin_password=data.admin_password
+    )
+    return success_response(result)
+
+
+# ==================== SUSPEND SELLER ====================
+
+class SuspendSellerRequest(BaseModel):
+    reason: str = Field(..., min_length=10)
+    admin_password: str
+
+
+@router.post("/users/{user_id}/suspend-seller")
+async def suspend_seller(
+    request: Request,
+    user_id: UUID,
+    data: SuspendSellerRequest,
+    admin: User = Depends(require_super_admin),
+    db: AsyncSession = Depends(get_db)
+):
+    """Suspend a seller and hide all their listings"""
+    ip, ua = get_request_info(request)
+    service = SuperAdminService(db, admin, ip, ua)
+    user = await service.suspend_seller(
+        user_id=user_id,
+        reason=data.reason,
+        admin_password=data.admin_password
+    )
+    return success_response({
+        "id": str(user.id),
+        "username": user.username,
+        "status": user.status,
+        "message": "Seller suspended and listings hidden"
+    })
