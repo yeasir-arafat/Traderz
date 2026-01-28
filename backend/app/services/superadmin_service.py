@@ -1358,3 +1358,563 @@ class SuperAdminService:
         actions = result.scalars().all()
         
         return actions, total
+    
+    # ==================== GAMES & FEES MANAGEMENT ====================
+    
+    async def update_game_buyer_note(
+        self,
+        game_id: UUID,
+        buyer_note_html: str
+    ) -> Game:
+        """Update buyer note HTML for a game"""
+        self._require_super_admin()
+        
+        result = await self.db.execute(select(Game).where(Game.id == game_id))
+        game = result.scalar_one_or_none()
+        
+        if not game:
+            raise AppException(ErrorCodes.NOT_FOUND, "Game not found", 404)
+        
+        before = {"buyer_note_html": game.buyer_note_html}
+        game.buyer_note_html = buyer_note_html
+        
+        await self.audit.log(
+            action_type=AdminActionType.UPDATE_CONFIG,
+            target_type=TargetType.GAME,
+            target_id=game_id,
+            reason=f"Updated buyer note for game {game.name}",
+            before_snapshot=before,
+            after_snapshot={"buyer_note_html": buyer_note_html[:100] + "..." if len(buyer_note_html) > 100 else buyer_note_html}
+        )
+        
+        await self.db.commit()
+        return game
+    
+    # ==================== ORDER MANAGEMENT ====================
+    
+    async def get_all_orders(
+        self,
+        status: str = None,
+        q: str = None,
+        from_date: datetime = None,
+        to_date: datetime = None,
+        page: int = 1,
+        page_size: int = 20
+    ) -> Tuple[List[Dict[str, Any]], int]:
+        """Get all orders with filtering for super admin"""
+        self._require_super_admin()
+        
+        query = select(Order).options(
+            selectinload(Order.buyer),
+            selectinload(Order.seller),
+            selectinload(Order.listing)
+        )
+        conditions = []
+        
+        if status:
+            conditions.append(Order.status == OrderStatus(status))
+        if q:
+            search = f"%{q}%"
+            conditions.append(or_(
+                Order.order_number.ilike(search),
+                Order.buyer.has(User.username.ilike(search)),
+                Order.seller.has(User.username.ilike(search))
+            ))
+        if from_date:
+            conditions.append(Order.created_at >= from_date)
+        if to_date:
+            conditions.append(Order.created_at <= to_date)
+        
+        if conditions:
+            query = query.where(and_(*conditions))
+        
+        count_query = select(func.count(Order.id))
+        if conditions:
+            count_query = count_query.where(and_(*conditions))
+        total = (await self.db.execute(count_query)).scalar() or 0
+        
+        query = query.order_by(Order.created_at.desc())
+        query = query.offset((page - 1) * page_size).limit(page_size)
+        
+        result = await self.db.execute(query)
+        orders = result.scalars().all()
+        
+        orders_data = []
+        for order in orders:
+            orders_data.append({
+                "id": str(order.id),
+                "order_number": order.order_number,
+                "status": order.status.value,
+                "amount_usd": order.amount_usd,
+                "platform_fee_usd": order.platform_fee_usd,
+                "seller_earnings_usd": order.seller_earnings_usd,
+                "buyer_username": order.buyer.username if order.buyer else None,
+                "buyer_id": str(order.buyer_id),
+                "seller_username": order.seller.username if order.seller else None,
+                "seller_id": str(order.seller_id),
+                "listing_title": order.listing.title if order.listing else None,
+                "listing_id": str(order.listing_id),
+                "created_at": order.created_at.isoformat(),
+                "completed_at": order.completed_at.isoformat() if order.completed_at else None,
+                "delivered_at": order.delivered_at.isoformat() if order.delivered_at else None,
+                "disputed_at": order.disputed_at.isoformat() if order.disputed_at else None,
+                "dispute_reason": order.dispute_reason,
+                "dispute_resolution": order.dispute_resolution
+            })
+        
+        return orders_data, total
+    
+    # ==================== WITHDRAWALS MANAGEMENT ====================
+    
+    async def get_withdrawal_requests(
+        self,
+        status: str = None,
+        page: int = 1,
+        page_size: int = 20
+    ) -> Tuple[List[Dict[str, Any]], int]:
+        """Get withdrawal requests with optional status filter"""
+        self._require_super_admin()
+        
+        from app.models.withdrawal import WithdrawalRequest, WithdrawalStatus
+        
+        query = select(WithdrawalRequest)
+        conditions = []
+        
+        if status:
+            conditions.append(WithdrawalRequest.status == WithdrawalStatus(status))
+        
+        if conditions:
+            query = query.where(and_(*conditions))
+        
+        count_query = select(func.count(WithdrawalRequest.id))
+        if conditions:
+            count_query = count_query.where(and_(*conditions))
+        total = (await self.db.execute(count_query)).scalar() or 0
+        
+        query = query.order_by(WithdrawalRequest.created_at.desc())
+        query = query.offset((page - 1) * page_size).limit(page_size)
+        
+        result = await self.db.execute(query)
+        requests = result.scalars().all()
+        
+        # Get user info
+        user_ids = [r.user_id for r in requests]
+        users_result = await self.db.execute(
+            select(User).where(User.id.in_(user_ids))
+        )
+        users_map = {u.id: u for u in users_result.scalars().all()}
+        
+        requests_data = []
+        for req in requests:
+            user = users_map.get(req.user_id)
+            requests_data.append({
+                "id": str(req.id),
+                "user_id": str(req.user_id),
+                "username": user.username if user else "Unknown",
+                "email": user.email if user else "Unknown",
+                "amount_usd": req.amount_usd,
+                "payment_method": req.payment_method,
+                "payment_details": req.payment_details,
+                "status": req.status.value,
+                "rejection_reason": req.rejection_reason,
+                "admin_notes": req.admin_notes,
+                "created_at": req.created_at.isoformat(),
+                "processed_at": req.processed_at.isoformat() if req.processed_at else None
+            })
+        
+        return requests_data, total
+    
+    async def process_withdrawal(
+        self,
+        withdrawal_id: UUID,
+        action: str,  # "approve" or "reject"
+        admin_password: str,
+        rejection_reason: str = None,
+        admin_notes: str = None
+    ) -> Dict[str, Any]:
+        """Approve or reject a withdrawal request"""
+        self._require_super_admin()
+        self._verify_password(admin_password)
+        
+        from app.models.withdrawal import WithdrawalRequest, WithdrawalStatus
+        
+        result = await self.db.execute(
+            select(WithdrawalRequest).where(WithdrawalRequest.id == withdrawal_id)
+        )
+        request = result.scalar_one_or_none()
+        
+        if not request:
+            raise AppException(ErrorCodes.NOT_FOUND, "Withdrawal request not found", 404)
+        
+        if request.status != WithdrawalStatus.PENDING:
+            raise AppException(ErrorCodes.INVALID_STATE, "Request is not pending", 400)
+        
+        before = {"status": request.status.value}
+        
+        if action == "approve":
+            # Get user balance
+            available, pending, frozen = await self._get_user_balance(request.user_id)
+            
+            if available < request.amount_usd:
+                raise AppException(ErrorCodes.INSUFFICIENT_BALANCE, "User has insufficient balance", 400)
+            
+            # Debit user wallet
+            new_available = available - request.amount_usd
+            
+            ledger = WalletLedger(
+                user_id=request.user_id,
+                entry_type=LedgerEntryType.WITHDRAWAL_PAID,
+                amount_usd=-request.amount_usd,
+                balance_available_after=new_available,
+                balance_pending_after=pending,
+                balance_frozen_after=frozen,
+                admin_id=self.admin.id,
+                reason=f"Withdrawal approved: {request.payment_method}",
+                description=f"Withdrawal #{str(request.id)[:8]} processed"
+            )
+            self.db.add(ledger)
+            await self.db.flush()
+            
+            request.status = WithdrawalStatus.APPROVED
+            request.ledger_entry_id = ledger.id
+            
+        elif action == "reject":
+            if not rejection_reason:
+                raise AppException(ErrorCodes.VALIDATION_ERROR, "Rejection reason required", 400)
+            
+            request.status = WithdrawalStatus.REJECTED
+            request.rejection_reason = rejection_reason
+        else:
+            raise AppException(ErrorCodes.VALIDATION_ERROR, "Invalid action", 400)
+        
+        request.processed_by = self.admin.id
+        request.processed_at = datetime.now(timezone.utc)
+        request.admin_notes = admin_notes
+        
+        await self.audit.log(
+            action_type=AdminActionType.WALLET_DEBIT if action == "approve" else AdminActionType.WALLET_FREEZE,
+            target_type=TargetType.USER,
+            target_id=request.user_id,
+            reason=f"Withdrawal {action}d: {rejection_reason or 'Approved'}",
+            before_snapshot=before,
+            after_snapshot={"status": request.status.value, "amount_usd": request.amount_usd},
+            confirmation_method=ConfirmationMethod.PASSWORD
+        )
+        
+        await self.db.commit()
+        
+        return {
+            "id": str(request.id),
+            "status": request.status.value,
+            "action": action,
+            "amount_usd": request.amount_usd
+        }
+    
+    # ==================== GIFT CARD MANAGEMENT ====================
+    
+    async def generate_gift_cards(
+        self,
+        count: int,
+        value_usd: float
+    ) -> List[Dict[str, Any]]:
+        """Generate one or more gift cards with 16-digit numeric codes"""
+        self._require_super_admin()
+        
+        import random
+        
+        if count < 1 or count > 100:
+            raise AppException(ErrorCodes.VALIDATION_ERROR, "Count must be between 1 and 100", 400)
+        
+        if value_usd <= 0 or value_usd > 10000:
+            raise AppException(ErrorCodes.VALIDATION_ERROR, "Value must be between 0.01 and 10000", 400)
+        
+        cards_created = []
+        
+        for _ in range(count):
+            # Generate 16-digit numeric code
+            code = ''.join([str(random.randint(0, 9)) for _ in range(16)])
+            
+            # Check uniqueness
+            existing = await self.db.execute(
+                select(GiftCard).where(GiftCard.code == code)
+            )
+            if existing.scalar_one_or_none():
+                # Regenerate if collision
+                code = ''.join([str(random.randint(0, 9)) for _ in range(16)])
+            
+            card = GiftCard(
+                code=code,
+                amount_usd=value_usd,
+                status="active",
+                is_active=True,
+                is_redeemed=False,
+                created_by=self.admin.id
+            )
+            self.db.add(card)
+            await self.db.flush()
+            
+            cards_created.append({
+                "id": str(card.id),
+                "code": card.code,
+                "amount_usd": card.amount_usd,
+                "status": card.status,
+                "created_at": card.created_at.isoformat()
+            })
+        
+        await self.audit.log(
+            action_type=AdminActionType.WALLET_CREDIT,
+            target_type=TargetType.CONFIG,
+            reason=f"Generated {count} gift card(s) worth ${value_usd} each",
+            after_snapshot={"count": count, "value_usd": value_usd, "codes": [c["code"][:4] + "****" for c in cards_created]}
+        )
+        
+        await self.db.commit()
+        return cards_created
+    
+    async def get_gift_cards(
+        self,
+        status: str = None,
+        code_search: str = None,
+        page: int = 1,
+        page_size: int = 50
+    ) -> Tuple[List[Dict[str, Any]], int]:
+        """Get gift cards with filtering"""
+        self._require_super_admin()
+        
+        query = select(GiftCard)
+        conditions = []
+        
+        if status:
+            conditions.append(GiftCard.status == status)
+        if code_search:
+            conditions.append(GiftCard.code.ilike(f"%{code_search}%"))
+        
+        if conditions:
+            query = query.where(and_(*conditions))
+        
+        count_query = select(func.count(GiftCard.id))
+        if conditions:
+            count_query = count_query.where(and_(*conditions))
+        total = (await self.db.execute(count_query)).scalar() or 0
+        
+        query = query.order_by(GiftCard.created_at.desc())
+        query = query.offset((page - 1) * page_size).limit(page_size)
+        
+        result = await self.db.execute(query)
+        cards = result.scalars().all()
+        
+        # Get redeemed_by usernames
+        redeemed_ids = [c.redeemed_by for c in cards if c.redeemed_by]
+        users_map = {}
+        if redeemed_ids:
+            users_result = await self.db.execute(
+                select(User).where(User.id.in_(redeemed_ids))
+            )
+            users_map = {u.id: u.username for u in users_result.scalars().all()}
+        
+        cards_data = []
+        for card in cards:
+            cards_data.append({
+                "id": str(card.id),
+                "code": card.code,
+                "amount_usd": card.amount_usd,
+                "status": card.status,
+                "redeemed_by": str(card.redeemed_by) if card.redeemed_by else None,
+                "redeemed_by_username": users_map.get(card.redeemed_by),
+                "redeemed_at": card.redeemed_at.isoformat() if card.redeemed_at else None,
+                "created_at": card.created_at.isoformat(),
+                "expires_at": card.expires_at.isoformat() if card.expires_at else None
+            })
+        
+        return cards_data, total
+    
+    async def deactivate_gift_card(
+        self,
+        card_id: UUID,
+        reason: str
+    ) -> Dict[str, Any]:
+        """Deactivate a gift card"""
+        self._require_super_admin()
+        
+        result = await self.db.execute(
+            select(GiftCard).where(GiftCard.id == card_id)
+        )
+        card = result.scalar_one_or_none()
+        
+        if not card:
+            raise AppException(ErrorCodes.NOT_FOUND, "Gift card not found", 404)
+        
+        if card.status == "redeemed":
+            raise AppException(ErrorCodes.INVALID_STATE, "Cannot deactivate redeemed card", 400)
+        
+        before = {"status": card.status}
+        card.status = "deactivated"
+        card.is_active = False
+        
+        await self.audit.log(
+            action_type=AdminActionType.WALLET_FREEZE,
+            target_type=TargetType.CONFIG,
+            target_id=card_id,
+            reason=reason,
+            before_snapshot=before,
+            after_snapshot={"status": "deactivated", "code": card.code[:4] + "****"}
+        )
+        
+        await self.db.commit()
+        
+        return {
+            "id": str(card.id),
+            "code": card.code,
+            "status": "deactivated"
+        }
+    
+    # ==================== ADMIN PERMISSION SCOPES ====================
+    
+    async def get_admin_scopes(
+        self,
+        admin_id: UUID
+    ) -> Dict[str, Any]:
+        """Get admin permission scopes"""
+        self._require_super_admin()
+        
+        result = await self.db.execute(
+            select(User).where(User.id == admin_id)
+        )
+        admin = result.scalar_one_or_none()
+        
+        if not admin:
+            raise AppException(ErrorCodes.NOT_FOUND, "Admin not found", 404)
+        
+        if "admin" not in admin.roles and "super_admin" not in admin.roles:
+            raise AppException(ErrorCodes.VALIDATION_ERROR, "User is not an admin", 400)
+        
+        return {
+            "id": str(admin.id),
+            "username": admin.username,
+            "email": admin.email,
+            "roles": admin.roles,
+            "admin_permissions": admin.admin_permissions or []
+        }
+    
+    async def update_admin_scopes(
+        self,
+        admin_id: UUID,
+        scopes: List[str],
+        admin_password: str
+    ) -> Dict[str, Any]:
+        """Update admin permission scopes"""
+        self._require_super_admin()
+        self._verify_password(admin_password)
+        
+        # Valid scopes
+        valid_scopes = ["LISTINGS_REVIEW", "KYC_REVIEW", "DISPUTE_RESOLVE", "FAQ_EDIT", "FINANCE_VIEW", "FINANCE_ACTION"]
+        
+        for scope in scopes:
+            if scope not in valid_scopes:
+                raise AppException(ErrorCodes.VALIDATION_ERROR, f"Invalid scope: {scope}", 400)
+        
+        result = await self.db.execute(
+            select(User).where(User.id == admin_id)
+        )
+        admin = result.scalar_one_or_none()
+        
+        if not admin:
+            raise AppException(ErrorCodes.NOT_FOUND, "Admin not found", 404)
+        
+        if "admin" not in admin.roles:
+            raise AppException(ErrorCodes.VALIDATION_ERROR, "User is not an admin", 400)
+        
+        if "super_admin" in admin.roles:
+            raise AppException(ErrorCodes.AUTHORIZATION_ERROR, "Cannot modify super admin scopes", 403)
+        
+        before = {"admin_permissions": admin.admin_permissions or []}
+        admin.admin_permissions = scopes
+        
+        await self.audit.log(
+            action_type=AdminActionType.PROMOTE_ROLE,
+            target_type=TargetType.USER,
+            target_id=admin_id,
+            reason=f"Updated admin scopes to: {', '.join(scopes) or 'none'}",
+            before_snapshot=before,
+            after_snapshot={"admin_permissions": scopes},
+            confirmation_method=ConfirmationMethod.PASSWORD
+        )
+        
+        await self.db.commit()
+        
+        return {
+            "id": str(admin.id),
+            "username": admin.username,
+            "admin_permissions": scopes
+        }
+    
+    async def apply_scope_preset(
+        self,
+        admin_id: UUID,
+        preset: str,
+        admin_password: str
+    ) -> Dict[str, Any]:
+        """Apply a preset scope configuration"""
+        presets = {
+            "moderator": ["LISTINGS_REVIEW", "DISPUTE_RESOLVE"],
+            "kyc_reviewer": ["KYC_REVIEW"],
+            "content_admin": ["FAQ_EDIT"],
+            "ops_admin": ["LISTINGS_REVIEW", "KYC_REVIEW", "DISPUTE_RESOLVE", "FAQ_EDIT"]
+        }
+        
+        if preset not in presets:
+            raise AppException(ErrorCodes.VALIDATION_ERROR, f"Invalid preset: {preset}", 400)
+        
+        return await self.update_admin_scopes(admin_id, presets[preset], admin_password)
+    
+    # ==================== MODERATION (EXTENDED) ====================
+    
+    async def suspend_seller(
+        self,
+        user_id: UUID,
+        reason: str,
+        admin_password: str
+    ) -> User:
+        """Suspend a seller (hide all listings, block new listings)"""
+        self._require_super_admin()
+        self._verify_password(admin_password)
+        
+        result = await self.db.execute(select(User).where(User.id == user_id))
+        user = result.scalar_one_or_none()
+        
+        if not user:
+            raise AppException(ErrorCodes.NOT_FOUND, "User not found", 404)
+        
+        if "seller" not in user.roles:
+            raise AppException(ErrorCodes.VALIDATION_ERROR, "User is not a seller", 400)
+        
+        before = {"status": user.status, "is_active": user.is_active}
+        
+        # Suspend user
+        user.status = "suspended"
+        user.status_reason = reason
+        user.status_changed_at = datetime.now(timezone.utc)
+        user.status_changed_by = self.admin.id
+        
+        # Hide all their active listings
+        await self.db.execute(
+            text("""
+                UPDATE listings 
+                SET status = 'inactive', rejection_reason = :reason
+                WHERE seller_id = :seller_id AND status = 'approved'
+            """),
+            {"seller_id": user_id, "reason": f"Seller suspended: {reason}"}
+        )
+        
+        await self.audit.log(
+            action_type=AdminActionType.BAN_USER,
+            target_type=TargetType.USER,
+            target_id=user_id,
+            reason=reason,
+            before_snapshot=before,
+            after_snapshot={"status": "suspended", "listings_hidden": True},
+            confirmation_method=ConfirmationMethod.PASSWORD
+        )
+        
+        await self.db.commit()
+        return user
