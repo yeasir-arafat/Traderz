@@ -434,14 +434,14 @@ class SuperAdminService:
         if not user:
             raise AppException(ErrorCodes.NOT_FOUND, "User not found", 404)
         
-        # Revoke all sessions
+        # Revoke all sessions by setting revoked_at
         await self.db.execute(
             text("""
                 UPDATE user_sessions 
-                SET is_active = false, revoked_at = :now, revoked_reason = :reason
-                WHERE user_id = :user_id AND is_active = true
+                SET revoked_at = :now
+                WHERE user_id = :user_id AND revoked_at IS NULL
             """),
-            {"user_id": user_id, "now": datetime.now(timezone.utc), "reason": reason}
+            {"user_id": user_id, "now": datetime.now(timezone.utc)}
         )
         
         await self.audit.log(
