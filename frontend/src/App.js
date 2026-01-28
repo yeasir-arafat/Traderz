@@ -82,6 +82,18 @@ function AdminRoute({ children }) {
   return children;
 }
 
+// Super Admin Route wrapper
+function SuperAdminRoute({ children }) {
+  const { isAuthenticated, user } = useAuthStore();
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+  if (!user?.roles?.includes('super_admin')) {
+    return <Navigate to="/" replace />;
+  }
+  return children;
+}
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
