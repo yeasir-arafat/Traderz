@@ -61,6 +61,12 @@ class Message(Base):
     # Read receipts
     read_by = Column(ARRAY(UUID(as_uuid=True)), nullable=False, default=[])
     
+    # Moderation
+    is_hidden = Column(Boolean, default=False, nullable=False)
+    hidden_at = Column(DateTime(timezone=True), nullable=True)
+    hidden_by = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
+    hidden_reason = Column(Text, nullable=True)
+    
     # Timestamps
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False, index=True)
     
