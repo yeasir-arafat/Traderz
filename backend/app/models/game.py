@@ -14,6 +14,8 @@ class Game(Base):
     slug = Column(String(100), unique=True, nullable=False, index=True)
     description = Column(Text, nullable=True)
     image_url = Column(String(500), nullable=True)
+    icon_url = Column(String(500), nullable=True)
+    buyer_note_html = Column(Text, nullable=True)  # Important note for buyers, shown on listings
     is_active = Column(Boolean, default=True, nullable=False)
     display_order = Column(Integer, default=0, nullable=False)
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
