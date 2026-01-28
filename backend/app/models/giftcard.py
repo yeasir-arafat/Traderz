@@ -5,18 +5,11 @@ Updated to use status enum per user requirements:
 - Single-use, no partial usage
 - Status: active | redeemed | deactivated
 """
-from sqlalchemy import Column, String, DateTime, Text, Float, ForeignKey, Enum
+from sqlalchemy import Column, String, DateTime, Text, Float, Boolean, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 from app.core.database import Base
 from datetime import datetime, timezone
 import uuid
-import enum
-
-
-class GiftCardStatus(str, enum.Enum):
-    ACTIVE = "active"
-    REDEEMED = "redeemed"
-    DEACTIVATED = "deactivated"
 
 
 class GiftCard(Base):
@@ -30,8 +23,8 @@ class GiftCard(Base):
     status = Column(String(20), default="active", nullable=False, index=True)
     
     # Legacy fields (kept for backward compatibility)
-    is_active = Column(String, default=True, nullable=False)  # Will be derived from status
-    is_redeemed = Column(String, default=False, nullable=False)  # Will be derived from status
+    is_active = Column(Boolean, default=True, nullable=False)
+    is_redeemed = Column(Boolean, default=False, nullable=False)
     
     # Redemption tracking
     redeemed_by = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
