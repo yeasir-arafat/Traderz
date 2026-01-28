@@ -40,6 +40,12 @@ import AuditLogsPage from './pages/superadmin/AuditLogsPage';
 import LegalPage from './pages/superadmin/LegalPage';
 import GamesFeesPage from './pages/superadmin/GamesFeesPage';
 import ModerationPage from './pages/superadmin/ModerationPage';
+import ConfigPage from './pages/superadmin/ConfigPage';
+import AllOrdersPage from './pages/superadmin/AllOrdersPage';
+import WithdrawalsPage from './pages/superadmin/WithdrawalsPage';
+import GiftCardsPage from './pages/superadmin/GiftCardsPage';
+import AdminScopesPage from './pages/superadmin/AdminScopesPage';
+import SystemHealthPage from './pages/superadmin/SystemHealthPage';
 
 
 const queryClient = new QueryClient({
