@@ -144,32 +144,6 @@ class AdminAction(Base):
     )
 
 
-class UserSession(Base):
-    """Track active user sessions for force logout functionality"""
-    __tablename__ = "user_sessions"
-    
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
-    
-    # Token info (store hashed refresh token)
-    token_hash = Column(String(255), nullable=False)
-    
-    # Session metadata
-    ip_address = Column(String(45), nullable=True)
-    user_agent = Column(String(500), nullable=True)
-    device_info = Column(String(255), nullable=True)
-    
-    # Status
-    is_active = Column(Boolean, default=True, nullable=False)
-    revoked_at = Column(DateTime(timezone=True), nullable=True)
-    revoked_reason = Column(String(100), nullable=True)
-    
-    # Timestamps
-    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
-    last_used_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
-    expires_at = Column(DateTime(timezone=True), nullable=False)
-
-
 class LegalDocument(Base):
     """Store terms of service and privacy policy versions"""
     __tablename__ = "legal_documents"
