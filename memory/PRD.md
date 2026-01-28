@@ -15,7 +15,7 @@ Create a full game account marketplace with:
 ## Architecture
 
 ### Tech Stack
-- **Frontend**: React + Tailwind CSS + shadcn/ui + Zustand + React Query + Firebase SDK
+- **Frontend**: React + Tailwind CSS + shadcn/ui + Zustand + React Query + Recharts
 - **Backend**: FastAPI + SQLAlchemy 2.x (async) + PostgreSQL (Neon)
 - **Auth**: JWT + Firebase (Google/Facebook social login)
 - **File Storage**: Local /uploads directory
@@ -27,100 +27,107 @@ Create a full game account marketplace with:
 - Ledger-based wallet (immutable entries)
 - State machine for order management
 - Role-based access control (buyer, seller, admin, super_admin)
-
-## User Personas
-1. **Buyer** - Purchases game accounts, manages wallet, chats with sellers
-2. **Seller** - Lists accounts, delivers orders, earns from sales
-3. **Admin** - Approves listings, KYC, resolves disputes
-4. **Super Admin** - Full platform control, config, finance
-
-## Core Requirements (Static)
-- Secure escrow payment protection
-- 24h dispute window after delivery
-- 10-day seller protection hold
-- Password policy enforcement
-- Terms acceptance required
-- KYC required for sellers
-- Profile lock after KYC approval
+- Immutable audit logs for all admin actions
 
 ## What's Been Implemented
+
+### January 28, 2026
+
+#### Owner-Grade Super Admin System ✅
+Complete "owner-grade" Super Admin system with:
+
+**Security Guardrails:**
+- Step-up confirmation for dangerous actions (password re-entry)
+- Typed confirm phrase required for large amounts (≥$1,000)
+- Immutable audit logs with IP address and user agent tracking
+- Idempotency key support for wallet operations
+
+**Super Admin Dashboard (`/superadmin`):**
+- KPI cards: Total Users, Sellers, Active Listings, Pending Listings, Pending KYC, Disputes, Orders in Delivery, Platform Earnings (7d)
+- Finance Overview: Deposits, Withdrawals, Escrow Held, Seller Pending, Frozen Funds, Platform Fees (all-time & 30d)
+- Charts: Orders over time (14 days), Revenue over time (14 days), Listing Status distribution, KYC Status distribution
+- Action Queues: Pending Listings, Pending KYC, Recent Disputes
+- System Health: Database connection status, Scheduler status with job schedules
+
+**Users Management (`/superadmin/users`):**
+- Search and filter users by role, status, KYC status
+- View user details with wallet balances and order/listing counts
+- Ban/Unban users with reason
+- Edit user roles (promote/demote) with password confirmation
+- Force logout (revoke all sessions)
+- Unlock profile for editing after KYC approval
+
+**Finance Console (`/superadmin/finance`):**
+- Search and select users
+- View user wallet balances (Available, Pending, Frozen)
+- Credit wallet (admin deposit)
+- Debit wallet (requires password, large amounts need "CONFIRM DEBIT")
+- Freeze funds (requires password, large amounts need "CONFIRM FREEZE")
+- Unfreeze funds
+- View user's ledger history
+
+**Audit Logs (`/superadmin/audit-logs`):**
+- View all admin actions
+- Filter by action type and target type
+- See actor role, IP address, timestamp
+- View action details (reason, before/after snapshots)
+
+**API Endpoints:**
+- GET `/api/superadmin/dashboard` - Dashboard stats
+- GET `/api/superadmin/system-health` - System health
+- GET `/api/superadmin/admin-actions` - Audit logs
+- GET/POST `/api/superadmin/admins` - Admin management
+- GET `/api/superadmin/users` - User list
+- GET `/api/superadmin/users/:id` - User detail
+- PATCH `/api/superadmin/users/:id/status` - Ban/unban
+- PATCH `/api/superadmin/users/:id/roles` - Role management
+- POST `/api/superadmin/users/:id/force-logout` - Force logout
+- POST `/api/superadmin/users/:id/unlock-profile` - Unlock profile
+- POST `/api/superadmin/wallet/credit|debit|freeze|unfreeze` - Wallet ops
+- GET `/api/superadmin/wallet/ledger` - User ledger
 
 ### January 25, 2026
 
 #### P0 Security Fixes ✅
 - Firebase credentials loaded from environment variables
-- Strict CORS policy (configurable origins, not *)
+- Strict CORS policy (configurable origins)
 - Pillow-based image validation on uploads
 - WebSocket with JWT authentication
 - APScheduler for background jobs
 
 #### P1 Admin Panel ✅
-- **Admin Dashboard** (`/admin`): Shows pending listings, pending KYC, disputed orders, active orders
-- **Pending Listings** (`/admin/listings`): Review and approve/reject seller listings
-- **KYC Review** (`/admin/kyc`): Verify seller identity documents
-- **Dispute Resolution** (`/admin/disputes`): Handle order disputes, refund buyer or complete for seller
-- Super Admin sees additional Platform Overview stats
+- Admin Dashboard, Pending Listings, KYC Review, Disputes
 
 #### P1 Seller Pages ✅
-- **My Listings** (`/my-listings`): View, edit, delete listings with status filter
-- **Create Listing** (`/sell/new`): Form with game selection, platforms, regions, images
-- **Edit Listing** (`/sell/:id/edit`): Modify existing listings
+- My Listings, Create/Edit Listing
 
 #### KYC System ✅
-- **KYC Page** (`/kyc`): Submit identity documents for verification
-- Document types: National ID, Passport, Driving License
-- Upload front, back, selfie
-- Status tracking (not_submitted, pending, approved, rejected)
+- KYC submission page with document upload
 
 #### Backend Services ✅
-- Listing service: Full CRUD, filters, approval workflow
-- Order service: State machine, escrow, disputes
-- Wallet service: Immutable ledger, all transaction types
-- Chat service: Conversations, messages, admin invite
-- KYC service: Submit, review, status tracking
-- User service: Profile, seller levels, rating
-- Scheduler: Auto-complete orders (24h), release pending earnings (10 days)
-
-#### Frontend Features ✅
-- Neon green/cyan dark theme
-- Homepage with hero, features, games
-- Browse page with filters
-- Listing details page
-- Login/Register with social login
-- Profile page with stats
-- Wallet page with deposit/withdraw/gift card
-- Orders page (purchases/sales tabs)
-- Order details with actions
-- Chat system
-- FAQ page
-- Mobile-responsive layout
-- Role-based navigation
-
-### Testing ✅
-- Backend: 100% pass rate (14/14 tests)
-- Frontend: 100% pass rate
-- Test file: `/app/backend/tests/test_admin_seller.py`
+- All core services fully implemented
 
 ## Prioritized Backlog
 
 ### P0 - Critical ✅ DONE
-- [x] Security fixes (Firebase, CORS, file validation)
+- [x] Security fixes
 - [x] Background jobs scheduler
-- [x] Admin panel (dashboard, listings, KYC, disputes)
-- [x] Seller create/edit listing pages
+- [x] Admin panel
+- [x] Seller pages
+- [x] **Super Admin System** (Owner-grade controls)
 
 ### P1 - High Priority
+- [ ] Real-time chat WebSocket integration in frontend
 - [ ] Notifications page (frontend)
 - [ ] Seller public profile page
 - [ ] Review system after order completion
-- [ ] Real-time chat WebSocket integration in frontend
-- [ ] Email notifications (SendGrid/similar)
+- [ ] Email notifications (SendGrid)
 
 ### P2 - Medium Priority
 - [ ] FAQ management (admin)
 - [ ] Gift card creation (admin)
-- [ ] User management (admin)
-- [ ] Fee rules configuration (admin)
+- [ ] Admin user management via UI
+- [ ] Fee rules configuration via UI
 - [ ] Password change/reset pages
 
 ### P3 - Nice to Have
@@ -130,63 +137,11 @@ Create a full game account marketplace with:
 - [ ] Advanced search filters
 - [ ] Analytics dashboard
 
-## API Endpoints
-
-### Auth
-- POST `/api/auth/register` - User registration
-- POST `/api/auth/login` - User login
-- POST `/api/auth/firebase` - Social login
-- GET `/api/auth/me` - Get current user
-
-### Listings
-- GET `/api/listings` - Browse listings
-- GET `/api/listings/my` - Seller's listings
-- POST `/api/listings` - Create listing (seller)
-- PUT `/api/listings/:id` - Update listing (seller)
-- DELETE `/api/listings/:id` - Delete listing (seller)
-- GET `/api/listings/admin/pending` - Pending listings (admin)
-- POST `/api/listings/admin/:id/review` - Approve/reject (admin)
-
-### Orders
-- POST `/api/orders` - Create order
-- GET `/api/orders/my/purchases` - Buyer's orders
-- GET `/api/orders/my/sales` - Seller's orders
-- POST `/api/orders/:id/deliver` - Deliver order (seller)
-- POST `/api/orders/:id/complete` - Complete order (buyer)
-- POST `/api/orders/:id/dispute` - Dispute order (buyer)
-- POST `/api/orders/admin/:id/resolve` - Resolve dispute (admin)
-
-### Wallet
-- GET `/api/wallet/balance` - Get balance
-- GET `/api/wallet/history` - Transaction history
-- POST `/api/wallet/deposit` - Mock deposit
-- POST `/api/wallet/redeem-giftcard` - Redeem gift card
-
-### KYC
-- GET `/api/kyc/my` - Get KYC status
-- POST `/api/kyc` - Submit KYC
-- GET `/api/kyc/admin/pending` - Pending KYC (admin)
-- POST `/api/kyc/admin/:id/review` - Review KYC (admin)
-
-### Admin
-- GET `/api/admin/dashboard` - Dashboard stats
-- GET `/api/admin/disputes` - Disputed orders
-
-### WebSocket
-- `/ws?token=<jwt>` - Real-time chat
-
 ## Seeded Accounts
-- **Super Admin**: super@admin.com / admin12
-- **Admin**: admin@admin.com / admin12
+- **Super Admin**: super@admin.com / admin12 (full platform control)
+- **Admin**: admin@admin.com / admin12 (moderation only)
 
 ## Known Mocked Features
 - **Wallet deposits**: No real payment gateway (mock deposit)
 - **Wallet withdrawals**: No real payout processing
 - **File storage**: Local filesystem (not cloud S3)
-
-## Database Schema (Key Tables)
-- User, Game, GamePlatform, Listing, Order, OrderCounter
-- WalletLedger (immutable), GiftCard
-- Conversation, Message
-- KycSubmission, Review
-- PlatformConfig, PlatformFeeRule, AdminAction, Notification
