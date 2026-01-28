@@ -1481,13 +1481,14 @@ class SuperAdminService:
         """Get withdrawal requests with optional status filter"""
         self._require_super_admin()
         
-        from app.models.withdrawal import WithdrawalRequest, WithdrawalStatus
+        from app.models.withdrawal import WithdrawalRequest
         
         query = select(WithdrawalRequest)
         conditions = []
         
         if status:
-            conditions.append(WithdrawalRequest.status == WithdrawalStatus(status))
+            # Compare against string value directly (not enum)
+            conditions.append(WithdrawalRequest.status == status)
         
         if conditions:
             query = query.where(and_(*conditions))
@@ -1505,10 +1506,12 @@ class SuperAdminService:
         
         # Get user info
         user_ids = [r.user_id for r in requests]
-        users_result = await self.db.execute(
-            select(User).where(User.id.in_(user_ids))
-        )
-        users_map = {u.id: u for u in users_result.scalars().all()}
+        users_map = {}
+        if user_ids:
+            users_result = await self.db.execute(
+                select(User).where(User.id.in_(user_ids))
+            )
+            users_map = {u.id: u for u in users_result.scalars().all()}
         
         requests_data = []
         for req in requests:
@@ -1521,7 +1524,7 @@ class SuperAdminService:
                 "amount_usd": req.amount_usd,
                 "payment_method": req.payment_method,
                 "payment_details": req.payment_details,
-                "status": req.status.value,
+                "status": req.status,  # Already a string now
                 "rejection_reason": req.rejection_reason,
                 "admin_notes": req.admin_notes,
                 "created_at": req.created_at.isoformat(),
