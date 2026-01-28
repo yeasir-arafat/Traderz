@@ -81,6 +81,7 @@ class User(Base):
     # Admin-specific fields
     created_by_admin = Column(UUID(as_uuid=True), ForeignKey("users.id", use_alter=True), nullable=True)
     admin_notes = Column(Text, nullable=True)
+    admin_permissions = Column(ARRAY(String), default=[], nullable=False)  # LISTINGS_REVIEW, KYC_REVIEW, DISPUTE_RESOLVE, FAQ_EDIT
     
     # Timestamps
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
