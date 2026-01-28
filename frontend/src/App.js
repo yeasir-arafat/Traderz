@@ -324,6 +324,46 @@ function App() {
                       </SuperAdminRoute>
                     }
                   />
+                  <Route
+                    path="/superadmin/orders"
+                    element={
+                      <SuperAdminRoute>
+                        <AllOrdersPage />
+                      </SuperAdminRoute>
+                    }
+                  />
+                  <Route
+                    path="/superadmin/withdrawals"
+                    element={
+                      <SuperAdminRoute>
+                        <WithdrawalsPage />
+                      </SuperAdminRoute>
+                    }
+                  />
+                  <Route
+                    path="/superadmin/giftcards"
+                    element={
+                      <SuperAdminRoute>
+                        <GiftCardsPage />
+                      </SuperAdminRoute>
+                    }
+                  />
+                  <Route
+                    path="/superadmin/admin-scopes"
+                    element={
+                      <SuperAdminRoute>
+                        <AdminScopesPage />
+                      </SuperAdminRoute>
+                    }
+                  />
+                  <Route
+                    path="/superadmin/system-health"
+                    element={
+                      <SuperAdminRoute>
+                        <SystemHealthPage />
+                      </SuperAdminRoute>
+                    }
+                  />
                   {/* 404 */}
                   <Route path="*" element={<NotFoundPage />} />
                 </Routes>
