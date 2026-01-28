@@ -190,12 +190,19 @@ export const superAdminAPI = {
   // Legacy stats
   getStats: () => api.get('/superadmin/stats'),
   getFinance: () => api.get('/superadmin/finance'),
-  getOrders: (params) => api.get('/superadmin/orders', { params }),
+  
+  // All Orders View
+  getAllOrders: (params) => api.get('/superadmin/orders', { params }),
   
   // Admin Management
   getAdmins: (params) => api.get('/superadmin/admins', { params }),
   createAdmin: (data) => api.post('/superadmin/admins', data),
   toggleAdmin: (id, data) => api.patch(`/superadmin/admins/${id}`, data),
+  
+  // Admin Permission Scopes
+  getAdminScopes: (adminId) => api.get(`/superadmin/admins/${adminId}/scopes`),
+  updateAdminScopes: (adminId, data) => api.put(`/superadmin/admins/${adminId}/scopes`, data),
+  applyAdminScopePreset: (adminId, data) => api.post(`/superadmin/admins/${adminId}/scopes/preset`, data),
   
   // User Management
   getUsers: (params) => api.get('/superadmin/users', { params }),
@@ -204,6 +211,7 @@ export const superAdminAPI = {
   updateUserRoles: (id, data) => api.patch(`/superadmin/users/${id}/roles`, data),
   forceLogout: (id, reason) => api.post(`/superadmin/users/${id}/force-logout?reason=${encodeURIComponent(reason)}`),
   unlockProfile: (id, data) => api.post(`/superadmin/users/${id}/unlock-profile`, data),
+  suspendSeller: (id, data) => api.post(`/superadmin/users/${id}/suspend-seller`, data),
   
   // Wallet / Finance
   creditWallet: (data, idempotencyKey) => api.post('/superadmin/wallet/credit', data, {
@@ -220,6 +228,10 @@ export const superAdminAPI = {
   }),
   getUserLedger: (userId, params) => api.get('/superadmin/wallet/ledger', { params: { user_id: userId, ...params } }),
   
+  // Withdrawals Management
+  getWithdrawals: (params) => api.get('/superadmin/withdrawals', { params }),
+  processWithdrawal: (id, data) => api.post(`/superadmin/withdrawals/${id}/process`, data),
+  
   // Order Overrides
   forceRefund: (orderId, data) => api.post(`/superadmin/orders/${orderId}/force-refund`, data),
   forceComplete: (orderId, data) => api.post(`/superadmin/orders/${orderId}/force-complete`, data),
@@ -228,6 +240,11 @@ export const superAdminAPI = {
   // Content Moderation
   hideListing: (id, data) => api.patch(`/superadmin/listings/${id}/status`, data),
   hideMessage: (id, data) => api.patch(`/superadmin/messages/${id}/hide`, data),
+  
+  // Gift Card Management
+  generateGiftCards: (data) => api.post('/superadmin/giftcards/generate', data),
+  getGiftCards: (params) => api.get('/superadmin/giftcards', { params }),
+  deactivateGiftCard: (id, data) => api.post(`/superadmin/giftcards/${id}/deactivate`, data),
   
   // Platform Config
   getConfig: () => api.get('/superadmin/config'),
