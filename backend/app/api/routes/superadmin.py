@@ -4,9 +4,10 @@ All routes require super_admin role and use audit logging.
 """
 from fastapi import APIRouter, Depends, Query, Header, Request
 from sqlalchemy.ext.asyncio import AsyncSession
-from typing import Optional
+from typing import Optional, List
 from uuid import UUID
 from datetime import datetime
+from pydantic import BaseModel, Field
 
 from app.core.database import get_db
 from app.core.responses import success_response
