@@ -127,6 +127,14 @@ export function Layout({ children }) {
                         </DropdownMenuItem>
                       </>
                     )}
+                    {isSuperAdmin && (
+                      <>
+                        <DropdownMenuItem onClick={() => navigate('/superadmin')} data-testid="superadmin-menu-item">
+                          <Shield className="w-4 h-4 mr-2 text-primary" />
+                          Super Admin
+                        </DropdownMenuItem>
+                      </>
+                    )}
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={handleLogout} className="text-destructive" data-testid="logout-menu-item">
                       <LogOut className="w-4 h-4 mr-2" />
