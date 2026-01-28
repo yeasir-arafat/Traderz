@@ -67,6 +67,20 @@ class User(Base):
     # Status
     is_active = Column(Boolean, default=True, nullable=False)
     is_verified = Column(Boolean, default=False, nullable=False)
+    status = Column(String(20), default="active", nullable=False)  # active, suspended, banned
+    status_reason = Column(Text, nullable=True)
+    status_changed_at = Column(DateTime(timezone=True), nullable=True)
+    status_changed_by = Column(UUID(as_uuid=True), ForeignKey("users.id", use_alter=True), nullable=True)
+    
+    # Profile lock override (for KYC unlock)
+    profile_unlocked = Column(Boolean, default=False, nullable=False)
+    profile_unlock_reason = Column(Text, nullable=True)
+    profile_unlocked_at = Column(DateTime(timezone=True), nullable=True)
+    profile_unlocked_by = Column(UUID(as_uuid=True), ForeignKey("users.id", use_alter=True), nullable=True)
+    
+    # Admin-specific fields
+    created_by_admin = Column(UUID(as_uuid=True), ForeignKey("users.id", use_alter=True), nullable=True)
+    admin_notes = Column(Text, nullable=True)
     
     # Timestamps
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
