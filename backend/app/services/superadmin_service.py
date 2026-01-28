@@ -1412,7 +1412,13 @@ class SuperAdminService:
         conditions = []
         
         if status:
-            conditions.append(Order.status == OrderStatus(status))
+            # Compare against enum value string
+            try:
+                order_status = OrderStatus(status)
+                conditions.append(Order.status == order_status)
+            except ValueError:
+                # Invalid status - ignore filter
+                pass
         if q:
             search = f"%{q}%"
             conditions.append(or_(
