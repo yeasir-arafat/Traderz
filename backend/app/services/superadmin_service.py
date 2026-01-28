@@ -1545,7 +1545,7 @@ class SuperAdminService:
         self._require_super_admin()
         self._verify_password(admin_password)
         
-        from app.models.withdrawal import WithdrawalRequest, WithdrawalStatus
+        from app.models.withdrawal import WithdrawalRequest
         
         result = await self.db.execute(
             select(WithdrawalRequest).where(WithdrawalRequest.id == withdrawal_id)
@@ -1555,10 +1555,10 @@ class SuperAdminService:
         if not request:
             raise AppException(ErrorCodes.NOT_FOUND, "Withdrawal request not found", 404)
         
-        if request.status != WithdrawalStatus.PENDING:
+        if request.status != "pending":
             raise AppException(ErrorCodes.INVALID_STATE, "Request is not pending", 400)
         
-        before = {"status": request.status.value}
+        before = {"status": request.status}
         
         if action == "approve":
             # Get user balance
@@ -1584,14 +1584,14 @@ class SuperAdminService:
             self.db.add(ledger)
             await self.db.flush()
             
-            request.status = WithdrawalStatus.APPROVED
+            request.status = "approved"
             request.ledger_entry_id = ledger.id
             
         elif action == "reject":
             if not rejection_reason:
                 raise AppException(ErrorCodes.VALIDATION_ERROR, "Rejection reason required", 400)
             
-            request.status = WithdrawalStatus.REJECTED
+            request.status = "rejected"
             request.rejection_reason = rejection_reason
         else:
             raise AppException(ErrorCodes.VALIDATION_ERROR, "Invalid action", 400)
@@ -1606,7 +1606,7 @@ class SuperAdminService:
             target_id=request.user_id,
             reason=f"Withdrawal {action}d: {rejection_reason or 'Approved'}",
             before_snapshot=before,
-            after_snapshot={"status": request.status.value, "amount_usd": request.amount_usd},
+            after_snapshot={"status": request.status, "amount_usd": request.amount_usd},
             confirmation_method=ConfirmationMethod.PASSWORD
         )
         
