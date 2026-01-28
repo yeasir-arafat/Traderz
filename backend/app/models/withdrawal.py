@@ -1,7 +1,7 @@
 """
 Withdrawal request model for managing withdrawal requests.
 """
-from sqlalchemy import Column, String, DateTime, Text, Float, Boolean, ForeignKey, Enum
+from sqlalchemy import Column, String, DateTime, Text, Float, Boolean, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from app.core.database import Base
@@ -31,8 +31,8 @@ class WithdrawalRequest(Base):
     payment_method = Column(String(50), nullable=False)  # bank, paypal, crypto, etc.
     payment_details = Column(Text, nullable=True)  # JSON or text with payment info
     
-    # Status
-    status = Column(Enum(WithdrawalStatus), default=WithdrawalStatus.PENDING, nullable=False, index=True)
+    # Status - using String instead of Enum to avoid PostgreSQL type creation issues
+    status = Column(String(20), default="pending", nullable=False, index=True)
     
     # Admin processing
     processed_by = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
