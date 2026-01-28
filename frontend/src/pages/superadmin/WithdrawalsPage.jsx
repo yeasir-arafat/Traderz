@@ -131,12 +131,12 @@ export default function WithdrawalsPage() {
 
       {/* Status Filter */}
       <div className="flex gap-4 mb-6">
-        <Select value={statusFilter} onValueChange={(val) => { setStatusFilter(val); setPage(1); }}>
+        <Select value={statusFilter || 'all'} onValueChange={(val) => { setStatusFilter(val === 'all' ? '' : val); setPage(1); }}>
           <SelectTrigger className="w-[180px]" data-testid="status-filter">
             <SelectValue placeholder="Filter by status" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All Statuses</SelectItem>
+            <SelectItem value="all">All Statuses</SelectItem>
             <SelectItem value="pending">Pending</SelectItem>
             <SelectItem value="approved">Approved</SelectItem>
             <SelectItem value="rejected">Rejected</SelectItem>
