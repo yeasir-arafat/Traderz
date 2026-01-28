@@ -9,6 +9,8 @@ class GameCreate(BaseModel):
     slug: str = Field(..., min_length=1, max_length=100)
     description: Optional[str] = None
     image_url: Optional[str] = None
+    icon_url: Optional[str] = None
+    buyer_note_html: Optional[str] = None  # Important note for buyers
     is_active: bool = True
     display_order: int = 0
 
@@ -17,6 +19,8 @@ class GameUpdate(BaseModel):
     name: Optional[str] = Field(None, min_length=1, max_length=100)
     description: Optional[str] = None
     image_url: Optional[str] = None
+    icon_url: Optional[str] = None
+    buyer_note_html: Optional[str] = None  # Important note for buyers
     is_active: Optional[bool] = None
     display_order: Optional[int] = None
 
@@ -64,6 +68,8 @@ class GameResponse(BaseModel):
     slug: str
     description: Optional[str]
     image_url: Optional[str]
+    icon_url: Optional[str] = None
+    buyer_note_html: Optional[str] = None
     is_active: bool
     display_order: int
     created_at: datetime
