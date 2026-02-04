@@ -76,7 +76,7 @@ All modules implemented with audit logging and step-up confirmation:
    - **Backend enforcement with INSUFFICIENT_SCOPE error**
    - **Frontend UI hides/locks buttons when scope missing**
 
-### UI/UX Updates (Jan 2026)
+### UI/UX Updates (Jan-Feb 2026)
 - **Super Admin Dashboard redesigned** with modern mobile-first design
   - Admin Hub header with animated "System Stable" indicator
   - Key Metrics horizontal scroll carousel
@@ -85,6 +85,13 @@ All modules implemented with audit logging and step-up confirmation:
   - Fixed bottom navigation bar
 - **Admin Dashboard** shows user's active scopes as badges
 - **Listing Detail Page** displays game-specific buyer notes
+- **Homepage redesigned** with modern gaming marketplace aesthetic
+  - Hero section with gradient overlays and "HOT DEAL" badge
+  - Game-categorized listing carousels with horizontal scroll
+  - Green (#13ec5b) accent color theme
+  - Features section with colorful icons
+  - Full footer with company info, links, social media, payment badges
+  - Mobile bottom navigation (Home, Search, Sell, Chat, Profile)
 
 ---
 
