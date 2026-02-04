@@ -370,8 +370,16 @@ export default function ChatPage() {
                       </div>
                     );
                   })}
+                  <div ref={messagesEndRef} />
                 </div>
               </ScrollArea>
+              
+              {/* Typing indicator */}
+              {typingUsers.size > 0 && (
+                <div className="px-4 py-2 text-xs text-muted-foreground">
+                  Someone is typing...
+                </div>
+              )}
               
               {/* Input */}
               <form onSubmit={handleSend} className="p-4 border-t border-border">
@@ -379,7 +387,7 @@ export default function ChatPage() {
                   <Input
                     placeholder="Type a message..."
                     value={newMessage}
-                    onChange={(e) => setNewMessage(e.target.value)}
+                    onChange={handleTyping}
                     className="flex-1 bg-muted/50"
                     data-testid="message-input"
                   />
