@@ -124,8 +124,10 @@ function App() {
                   <Route path="/" element={<HomePage />} />
                   <Route path="/browse" element={<BrowsePage />} />
                   <Route path="/listing/:id" element={<ListingDetailsPage />} />
-                  <Route path="/seller/:id" element={<SellerProfilePage />} />
+                  <Route path="/seller/:username" element={<SellerProfilePage />} />
                   <Route path="/faq" element={<FAQPage />} />
+                  <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                  <Route path="/reset-password" element={<ResetPasswordPage />} />
                   
                   {/* Protected routes */}
                   <Route
