@@ -1,5 +1,5 @@
 from sqlalchemy import Column, String, Boolean, DateTime, Text, Integer, ForeignKey
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import UUID, ARRAY
 from sqlalchemy.orm import relationship
 from app.core.database import Base
 from datetime import datetime, timezone
@@ -16,6 +16,10 @@ class Game(Base):
     image_url = Column(String(500), nullable=True)
     icon_url = Column(String(500), nullable=True)
     buyer_note_html = Column(Text, nullable=True)  # Important note for buyers, shown on listings
+    
+    # Game-specific regions (e.g., ['Global', 'NA', 'EU', 'Asia', 'SEA'])
+    regions = Column(ARRAY(String), nullable=False, default=[])
+    
     is_active = Column(Boolean, default=True, nullable=False)
     display_order = Column(Integer, default=0, nullable=False)
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
