@@ -4,6 +4,7 @@ from sqlalchemy.orm import selectinload
 from typing import Optional, List
 from uuid import UUID
 from datetime import datetime, timedelta, timezone
+import logging
 
 from app.models.order import Order, OrderStatus, OrderCounter
 from app.models.listing import Listing, ListingStatus
@@ -16,7 +17,22 @@ from app.services.user_service import get_seller_fee_discount, update_seller_sta
 from app.services.fee_service import get_platform_fee
 from app.core.errors import AppException
 from app.core.responses import ErrorCodes
+from app.core.config import settings
 from app.schemas.order import OrderCreate, OrderResponse, OrderListResponse
+
+logger = logging.getLogger(__name__)
+
+# Frontend URL for email links
+FRONTEND_URL = "https://account-exchange-3.preview.emergentagent.com"
+
+
+def send_order_email_async(to_email: str, order_number: str, notification_type: str, details: dict):
+    """Send order email (non-blocking, logs errors)"""
+    try:
+        from app.services.email_service import send_order_notification_email
+        send_order_notification_email(to_email, order_number, notification_type, details)
+    except Exception as e:
+        logger.error(f"Failed to send order email to {to_email}: {e}")
 
 
 async def generate_order_number(db: AsyncSession) -> str:
