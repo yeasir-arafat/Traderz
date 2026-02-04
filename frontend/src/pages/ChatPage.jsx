@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Send, Loader2, ArrowLeft, Shield } from 'lucide-react';
+import { Send, Loader2, ArrowLeft, Shield, Wifi, WifiOff } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { ScrollArea } from '../components/ui/scroll-area';
@@ -9,10 +9,12 @@ import { useAuthStore } from '../store';
 import { formatDateTime } from '../lib/utils';
 import { toast } from 'sonner';
 
+const WS_URL = process.env.REACT_APP_BACKEND_URL?.replace('https://', 'wss://').replace('http://', 'ws://') + '/ws';
+
 export default function ChatPage() {
   const { id: conversationId } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuthStore();
+  const { user, token } = useAuthStore();
   
   const [conversations, setConversations] = useState([]);
   const [messages, setMessages] = useState([]);
@@ -20,6 +22,109 @@ export default function ChatPage() {
   const [sending, setSending] = useState(false);
   const [newMessage, setNewMessage] = useState('');
   const [selectedConversation, setSelectedConversation] = useState(null);
+  const [isConnected, setIsConnected] = useState(false);
+  const [typingUsers, setTypingUsers] = useState(new Set());
+  
+  const wsRef = useRef(null);
+  const typingTimeoutRef = useRef(null);
+  const messagesEndRef = useRef(null);
+  
+  // Scroll to bottom when messages change
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+  
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+  
+  // WebSocket connection
+  useEffect(() => {
+    if (!token) return;
+    
+    const connectWebSocket = () => {
+      const ws = new WebSocket(`${WS_URL}?token=${token}`);
+      
+      ws.onopen = () => {
+        console.log('WebSocket connected');
+        setIsConnected(true);
+        // Join conversation if selected
+        if (conversationId) {
+          ws.send(JSON.stringify({ type: 'join', conversation_id: conversationId }));
+        }
+      };
+      
+      ws.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        handleWsMessage(data);
+      };
+      
+      ws.onclose = () => {
+        console.log('WebSocket disconnected');
+        setIsConnected(false);
+        // Reconnect after 3 seconds
+        setTimeout(connectWebSocket, 3000);
+      };
+      
+      ws.onerror = (error) => {
+        console.error('WebSocket error:', error);
+      };
+      
+      wsRef.current = ws;
+    };
+    
+    connectWebSocket();
+    
+    return () => {
+      if (wsRef.current) {
+        wsRef.current.close();
+      }
+    };
+  }, [token]);
+  
+  // Join conversation when it changes
+  useEffect(() => {
+    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN && conversationId) {
+      wsRef.current.send(JSON.stringify({ type: 'join', conversation_id: conversationId }));
+    }
+  }, [conversationId]);
+  
+  const handleWsMessage = useCallback((data) => {
+    switch (data.type) {
+      case 'new_message':
+        if (data.conversation_id === conversationId) {
+          setMessages(prev => [...prev, data.message]);
+        }
+        // Update unread count in conversations list
+        setConversations(prev => prev.map(c => 
+          c.id === data.conversation_id 
+            ? { ...c, last_message: data.message, unread_count: c.id === conversationId ? 0 : c.unread_count + 1 }
+            : c
+        ));
+        break;
+      case 'typing':
+        if (data.conversation_id === conversationId && data.user_id !== user?.id) {
+          setTypingUsers(prev => {
+            const newSet = new Set(prev);
+            if (data.is_typing) {
+              newSet.add(data.user_id);
+            } else {
+              newSet.delete(data.user_id);
+            }
+            return newSet;
+          });
+        }
+        break;
+      case 'joined':
+        console.log('Joined conversation:', data.conversation_id);
+        break;
+      case 'error':
+        toast.error(data.message);
+        break;
+      default:
+        break;
+    }
+  }, [conversationId, user?.id]);
   
   useEffect(() => {
     fetchConversations();
