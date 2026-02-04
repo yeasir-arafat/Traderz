@@ -1,5 +1,5 @@
-from sendgrid import SendGridAPIClient
-from sendgrid.helpers.mail import Mail, Email, To, Content
+import sib_api_v3_sdk
+from sib_api_v3_sdk.rest import ApiException
 import os
 import logging
 from typing import Optional
@@ -11,13 +11,16 @@ class EmailDeliveryError(Exception):
     pass
 
 
-def get_sendgrid_client() -> Optional[SendGridAPIClient]:
-    """Get SendGrid client if API key is configured"""
-    api_key = os.getenv('SENDGRID_API_KEY')
-    if not api_key:
-        logger.warning("SendGrid API key not configured")
+def get_brevo_api():
+    """Get Brevo/Sendinblue API instance"""
+    api_key = os.getenv('SENDGRID_API_KEY')  # Using same env var for compatibility
+    if not api_key or not api_key.startswith('xkeysib-'):
+        logger.warning("Brevo API key not configured or invalid format")
         return None
-    return SendGridAPIClient(api_key)
+    
+    configuration = sib_api_v3_sdk.Configuration()
+    configuration.api_key['api-key'] = api_key
+    return sib_api_v3_sdk.TransactionalEmailsApi(sib_api_v3_sdk.ApiClient(configuration))
 
 
 def send_email(
@@ -27,7 +30,7 @@ def send_email(
     plain_content: Optional[str] = None
 ) -> bool:
     """
-    Send email via SendGrid
+    Send email via Brevo/Sendinblue
     
     Args:
         to_email: Recipient email address
@@ -38,35 +41,32 @@ def send_email(
     Returns:
         True if email sent successfully, False otherwise
     """
-    sg = get_sendgrid_client()
+    api_instance = get_brevo_api()
     sender_email = os.getenv('SENDER_EMAIL', 'noreply@playtraderz.com')
     
-    if not sg:
-        # Log the email instead if SendGrid not configured
+    if not api_instance:
+        # Log the email instead if Brevo not configured
         logger.info(f"[EMAIL MOCK] To: {to_email}, Subject: {subject}")
         logger.info(f"[EMAIL MOCK] Content: {html_content[:200]}...")
         return True
     
-    message = Mail(
-        from_email=Email(sender_email, "PlayTraderz"),
-        to_emails=To(to_email),
+    send_smtp_email = sib_api_v3_sdk.SendSmtpEmail(
+        to=[{"email": to_email}],
+        sender={"email": sender_email, "name": "PlayTraderz"},
         subject=subject,
-        html_content=Content("text/html", html_content)
+        html_content=html_content,
+        text_content=plain_content
     )
     
-    if plain_content:
-        message.add_content(Content("text/plain", plain_content))
-    
     try:
-        response = sg.send(message)
-        if response.status_code in [200, 201, 202]:
-            logger.info(f"Email sent successfully to {to_email}")
-            return True
-        else:
-            logger.error(f"Email send failed with status {response.status_code}")
-            return False
+        api_instance.send_transac_email(send_smtp_email)
+        logger.info(f"Email sent successfully to {to_email}")
+        return True
+    except ApiException as e:
+        logger.error(f"Failed to send email to {to_email}: {e}")
+        raise EmailDeliveryError(f"Failed to send email: {str(e)}")
     except Exception as e:
-        logger.error(f"Failed to send email to {to_email}: {str(e)}")
+        logger.error(f"Unexpected error sending email to {to_email}: {str(e)}")
         raise EmailDeliveryError(f"Failed to send email: {str(e)}")
 
 
