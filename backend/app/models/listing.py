@@ -1,5 +1,5 @@
 from sqlalchemy import Column, String, Boolean, DateTime, Text, Float, Integer, ForeignKey, Enum
-from sqlalchemy.dialects.postgresql import UUID, ARRAY
+from sqlalchemy.dialects.postgresql import UUID, ARRAY, JSONB
 from sqlalchemy.orm import relationship
 from app.core.database import Base
 from datetime import datetime, timezone
@@ -32,10 +32,17 @@ class Listing(Base):
     platforms = Column(ARRAY(String), nullable=False, default=[])  # ['PC', 'PS5']
     regions = Column(ARRAY(String), nullable=False, default=[])  # ['Global', 'NA']
     
-    # Account details
+    # Video URL (mandatory for account verification)
+    video_url = Column(String(500), nullable=True)
+    
+    # Account details - dynamic key-value pairs (up to 10)
+    # Format: [{"label": "Account Level", "value": "100"}, {"label": "Diamonds", "value": "5000"}]
+    account_details = Column(JSONB, nullable=False, default=[])
+    
+    # Legacy fields (kept for backward compatibility)
     account_level = Column(String(50), nullable=True)
     account_rank = Column(String(50), nullable=True)
-    account_features = Column(Text, nullable=True)  # JSON string of features
+    account_features = Column(Text, nullable=True)
     
     # Images (max 5)
     images = Column(ARRAY(String), nullable=False, default=[])
