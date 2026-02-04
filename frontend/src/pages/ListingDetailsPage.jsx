@@ -200,6 +200,20 @@ export default function ListingDetailsPage() {
             <p className="text-muted-foreground whitespace-pre-wrap">{listing.description}</p>
           </div>
           
+          {/* Game-specific Buyer Note */}
+          {listing.game?.buyer_note_html && (
+            <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <Shield className="w-5 h-5 text-yellow-500" />
+                <h3 className="font-semibold text-yellow-500">Important Information for {listing.game.name} Buyers</h3>
+              </div>
+              <div 
+                className="text-sm text-muted-foreground prose prose-sm dark:prose-invert max-w-none"
+                dangerouslySetInnerHTML={{ __html: listing.game.buyer_note_html }}
+              />
+            </div>
+          )}
+          
           {/* Account Details */}
           {(listing.account_level || listing.account_rank || listing.account_features) && (
             <div>
