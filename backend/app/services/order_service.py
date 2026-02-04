@@ -260,7 +260,16 @@ async def deliver_order(db: AsyncSession, order_id: UUID, seller_id: UUID, deliv
         )
         .where(Order.id == order_id)
     )
-    return result.scalar_one()
+    order = result.scalar_one()
+    
+    # Send email notification to buyer
+    if order.buyer:
+        send_order_email_async(
+            order.buyer.email, order.order_number, "order_delivered",
+            {"amount": order.amount_usd, "order_id": str(order.id), "frontend_url": FRONTEND_URL}
+        )
+    
+    return order
 
 
 async def complete_order(db: AsyncSession, order_id: UUID, user_id: UUID, completed_by: str = "buyer") -> Order:
@@ -307,7 +316,21 @@ async def complete_order(db: AsyncSession, order_id: UUID, user_id: UUID, comple
         )
         .where(Order.id == order_id)
     )
-    return result.scalar_one()
+    order = result.scalar_one()
+    
+    # Send email notifications to both parties
+    if order.buyer:
+        send_order_email_async(
+            order.buyer.email, order.order_number, "order_completed",
+            {"amount": order.amount_usd, "order_id": str(order.id), "frontend_url": FRONTEND_URL}
+        )
+    if order.seller:
+        send_order_email_async(
+            order.seller.email, order.order_number, "order_completed",
+            {"amount": order.seller_earnings_usd, "order_id": str(order.id), "frontend_url": FRONTEND_URL}
+        )
+    
+    return order
 
 
 async def dispute_order(db: AsyncSession, order_id: UUID, buyer_id: UUID, reason: str) -> Order:
