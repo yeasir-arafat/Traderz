@@ -49,6 +49,8 @@ async def create_listing(db: AsyncSession, seller: User, data: ListingCreate) ->
         price_usd=data.price_usd,
         platforms=data.platforms,
         regions=data.regions,
+        video_url=data.video_url,
+        account_details=[d.model_dump() for d in data.account_details] if data.account_details else [],
         account_level=data.account_level,
         account_rank=data.account_rank,
         account_features=data.account_features,
