@@ -44,7 +44,7 @@ export default function ForgotPasswordPage() {
               </div>
               <h2 className="text-2xl font-bold mb-2">Check Your Email</h2>
               <p className="text-muted-foreground mb-6">
-                If an account exists with <strong>{email}</strong>, you'll receive a password reset link shortly.
+                If an account exists with <strong>{email}</strong>, you will receive a password reset link shortly.
               </p>
               <div className="space-y-3">
                 <Button asChild className="w-full">
@@ -77,7 +77,7 @@ export default function ForgotPasswordPage() {
           </div>
           <CardTitle className="text-2xl">Forgot Password?</CardTitle>
           <CardDescription>
-            No worries! Enter your email and we'll send you a reset link.
+            No worries! Enter your email and we will send you a reset link.
           </CardDescription>
         </CardHeader>
         <CardContent>
