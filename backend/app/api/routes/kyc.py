@@ -47,10 +47,10 @@ async def get_my_kyc(
 async def get_pending_kyc(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
-    user: User = Depends(require_admin),
+    user: User = Depends(require_admin_scope("KYC_REVIEW")),
     db: AsyncSession = Depends(get_db)
 ):
-    """Get pending KYC submissions (admin)"""
+    """Get pending KYC submissions (admin). Requires KYC_REVIEW scope."""
     result = await kyc_service.get_pending_kyc(db, page, page_size)
     return success_response(result.model_dump())
 
@@ -59,10 +59,10 @@ async def get_pending_kyc(
 async def review_kyc(
     submission_id: str,
     data: KycReviewRequest,
-    user: User = Depends(require_admin),
+    user: User = Depends(require_admin_scope("KYC_REVIEW")),
     db: AsyncSession = Depends(get_db)
 ):
-    """Review KYC submission (admin)"""
+    """Review KYC submission (admin). Requires KYC_REVIEW scope."""
     from uuid import UUID
     submission = await kyc_service.review_kyc(
         db, UUID(submission_id), user.id, data.approved, data.review_note
