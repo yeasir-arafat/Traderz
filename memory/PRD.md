@@ -209,6 +209,13 @@ CREATE TABLE withdrawal_requests (
   - Real email delivery via **Brevo/Sendinblue** (not mocked!)
   - HTML email templates with PlayTraderz branding
   - Password validation and secure token handling
+- **Added Email Notifications for Order Status Changes**
+  - Order created: Both buyer and seller notified
+  - Order delivered: Buyer notified
+  - Order completed: Both parties notified
+  - Order disputed: Seller notified
+  - Order refunded: Both parties notified
+  - Professional HTML email templates with view order links
 - **Fixed Core Marketplace Functionality**
   - Fixed SQLAlchemy async relationship loading in services
   - Escrow system working: buyer funds held, released to seller pending
