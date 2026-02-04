@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
+from typing import Optional
 
 from app.core.database import get_db
 from app.core.responses import success_response
@@ -37,3 +38,13 @@ async def become_seller(
     """Add seller role to user"""
     updated = await user_service.become_seller(db, user)
     return success_response(UserResponse.model_validate(updated).model_dump())
+
+
+@router.get("/seller/{username}")
+async def get_seller_profile(
+    username: str,
+    db: AsyncSession = Depends(get_db)
+):
+    """Get public seller profile"""
+    profile = await user_service.get_seller_public_profile(db, username)
+    return success_response(profile)
