@@ -24,7 +24,7 @@ async def create_listing(db: AsyncSession, seller: User, data: ListingCreate) ->
     
     # Verify game exists
     game_result = await db.execute(
-        select(Game).where(Game.id == data.game_id, Game.is_active == True)
+        select(Game).where(Game.id == data.game_id, Game.is_active.is_(True))
     )
     game = game_result.scalar_one_or_none()
     if not game:
