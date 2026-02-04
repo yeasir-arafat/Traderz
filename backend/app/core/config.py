@@ -19,6 +19,10 @@ class Settings(BaseSettings):
     FIREBASE_CLIENT_EMAIL: Optional[str] = None
     FIREBASE_PRIVATE_KEY: Optional[str] = None
     
+    # Email (Brevo/SendGrid)
+    SENDGRID_API_KEY: Optional[str] = None
+    SENDER_EMAIL: str = "noreply@playtraderz.com"
+    
     # App
     APP_NAME: str = "PlayTraderz"
     DEBUG: bool = False
