@@ -264,8 +264,18 @@ async def complete_order(db: AsyncSession, order_id: UUID, user_id: UUID, comple
     await update_seller_stats(db, order.seller_id, order.amount_usd)
     
     await db.commit()
-    await db.refresh(order)
-    return order
+    
+    # Re-fetch with relationships loaded
+    result = await db.execute(
+        select(Order)
+        .options(
+            selectinload(Order.buyer),
+            selectinload(Order.seller),
+            selectinload(Order.listing)
+        )
+        .where(Order.id == order_id)
+    )
+    return result.scalar_one()
 
 
 async def dispute_order(db: AsyncSession, order_id: UUID, buyer_id: UUID, reason: str) -> Order:
