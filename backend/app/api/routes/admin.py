@@ -60,10 +60,10 @@ async def get_dashboard(
 async def get_disputed_orders(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
-    user: User = Depends(require_admin),
+    user: User = Depends(require_admin_scope("DISPUTE_RESOLVE")),
     db: AsyncSession = Depends(get_db)
 ):
-    """Get disputed orders for admin resolution"""
+    """Get disputed orders for admin resolution. Requires DISPUTE_RESOLVE scope."""
     query = select(Order).options(
         selectinload(Order.buyer),
         selectinload(Order.seller),
