@@ -352,8 +352,18 @@ async def resolve_dispute(db: AsyncSession, order_id: UUID, admin_id: UUID, reso
     order.dispute_resolution = note
     
     await db.commit()
-    await db.refresh(order)
-    return order
+    
+    # Re-fetch with relationships loaded
+    result = await db.execute(
+        select(Order)
+        .options(
+            selectinload(Order.buyer),
+            selectinload(Order.seller),
+            selectinload(Order.listing)
+        )
+        .where(Order.id == order_id)
+    )
+    return result.scalar_one()
 
 
 async def cancel_order(db: AsyncSession, order_id: UUID, user_id: UUID) -> Order:
