@@ -5,7 +5,7 @@ from uuid import UUID
 
 from app.core.database import get_db
 from app.core.responses import success_response
-from app.api.deps import get_current_user, require_seller, require_admin
+from app.api.deps import get_current_user, require_seller, require_admin, require_admin_scope
 from app.models.user import User
 from app.services import listing_service
 from app.schemas.listing import ListingCreate, ListingUpdate, ListingApproval, ListingResponse
