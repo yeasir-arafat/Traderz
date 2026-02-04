@@ -31,6 +31,11 @@ A full-stack game account marketplace with wallet/escrow system, real-time chat,
   - Order completed (buyer + seller)
   - Order disputed (seller)
   - Order refunded (buyer + seller)
+- **Enhanced Listing Creation**:
+  - Game-specific platforms and regions
+  - Mandatory video URL (YouTube, Vimeo, etc.)
+  - Dynamic account details (up to 10 label-value pairs)
+  - Image upload with preview (recommended 1280x720px)
 
 ### Seller Features (Complete)
 - Create/edit listings with images
