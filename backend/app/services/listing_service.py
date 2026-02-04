@@ -96,6 +96,10 @@ async def update_listing(db: AsyncSession, listing_id: UUID, seller_id: UUID, da
         listing.platforms = data.platforms
     if data.regions is not None:
         listing.regions = data.regions
+    if data.video_url is not None:
+        listing.video_url = data.video_url
+    if data.account_details is not None:
+        listing.account_details = [d.model_dump() for d in data.account_details]
     if data.account_level is not None:
         listing.account_level = data.account_level
     if data.account_rank is not None:
