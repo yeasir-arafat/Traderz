@@ -220,6 +220,12 @@ CREATE TABLE withdrawal_requests (
 - File storage uses local filesystem (not cloud S3)
 - Database migrations applied via direct SQL (no Alembic)
 
+## 3rd Party Integrations
+- **PostgreSQL (Neon)**: Main application database
+- **Firebase**: Google & Facebook social login
+- **Brevo/Sendinblue**: Email delivery for password reset and notifications
+- **Pillow**: Python imaging library for file uploads
+
 ---
 
 ## Architecture Notes
