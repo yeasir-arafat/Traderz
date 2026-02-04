@@ -302,8 +302,18 @@ async def dispute_order(db: AsyncSession, order_id: UUID, buyer_id: UUID, reason
     order.disputed_at = datetime.now(timezone.utc)
     
     await db.commit()
-    await db.refresh(order)
-    return order
+    
+    # Re-fetch with relationships loaded
+    result = await db.execute(
+        select(Order)
+        .options(
+            selectinload(Order.buyer),
+            selectinload(Order.seller),
+            selectinload(Order.listing)
+        )
+        .where(Order.id == order_id)
+    )
+    return result.scalar_one()
 
 
 async def resolve_dispute(db: AsyncSession, order_id: UUID, admin_id: UUID, resolution: str, note: str) -> Order:
