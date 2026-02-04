@@ -214,8 +214,54 @@ export default function ListingDetailsPage() {
             </div>
           )}
           
-          {/* Account Details */}
-          {(listing.account_level || listing.account_rank || listing.account_features) && (
+          {/* Account Video */}
+          {listing.video_url && (
+            <div>
+              <h2 className="text-xl font-heading font-semibold mb-3">Account Video</h2>
+              <div className="aspect-video bg-muted rounded-lg overflow-hidden">
+                {listing.video_url.includes('youtube.com') || listing.video_url.includes('youtu.be') ? (
+                  <iframe
+                    src={listing.video_url.replace('watch?v=', 'embed/').replace('youtu.be/', 'youtube.com/embed/')}
+                    title="Account Video"
+                    className="w-full h-full"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  />
+                ) : (
+                  <a 
+                    href={listing.video_url} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="w-full h-full flex items-center justify-center hover:bg-muted/80 transition-colors"
+                  >
+                    <div className="text-center">
+                      <Gamepad2 className="w-12 h-12 mx-auto mb-2 text-primary" />
+                      <p className="text-primary font-medium">View Account Video</p>
+                      <p className="text-xs text-muted-foreground mt-1">Opens in new tab</p>
+                    </div>
+                  </a>
+                )}
+              </div>
+            </div>
+          )}
+          
+          {/* Account Details - New dynamic format */}
+          {listing.account_details?.length > 0 && (
+            <div>
+              <h2 className="text-xl font-heading font-semibold mb-3">Account Details</h2>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                {listing.account_details.map((detail, index) => (
+                  <div key={index} className="p-3 bg-muted/50 rounded-lg">
+                    <p className="text-xs text-muted-foreground mb-1">{detail.label}</p>
+                    <p className="font-medium">{detail.value}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          
+          {/* Legacy Account Details (for backward compatibility) */}
+          {!listing.account_details?.length && (listing.account_level || listing.account_rank || listing.account_features) && (
             <div>
               <h2 className="text-xl font-heading font-semibold mb-3">Account Details</h2>
               <div className="grid grid-cols-2 gap-4">
