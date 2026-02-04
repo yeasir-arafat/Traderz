@@ -238,8 +238,14 @@ async def approve_listing(db: AsyncSession, listing_id: UUID, admin_id: UUID, ap
         listing.rejection_reason = rejection_reason
     
     await db.commit()
-    await db.refresh(listing)
-    return listing
+    
+    # Re-fetch with relationships loaded
+    result = await db.execute(
+        select(Listing)
+        .options(selectinload(Listing.seller), selectinload(Listing.game))
+        .where(Listing.id == listing_id)
+    )
+    return result.scalar_one()
 
 
 async def delete_listing(db: AsyncSession, listing_id: UUID, user_id: UUID) -> bool:
