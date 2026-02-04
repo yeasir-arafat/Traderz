@@ -111,9 +111,8 @@ def require_admin_scope(*scopes: str):
         if not any(scope in admin_permissions for scope in scopes):
             raise AppException(
                 ErrorCodes.AUTHORIZATION_ERROR, 
-                f"Insufficient scope. Required: {', '.join(scopes)}", 
-                403,
-                details={"code": "INSUFFICIENT_SCOPE", "required_scopes": list(scopes)}
+                f"INSUFFICIENT_SCOPE: Required scopes: {', '.join(scopes)}", 
+                403
             )
         
         return user
