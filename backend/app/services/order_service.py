@@ -393,11 +393,13 @@ async def resolve_dispute(db: AsyncSession, order_id: UUID, admin_id: UUID, reso
     if order.status != OrderStatus.DISPUTED:
         raise AppException(ErrorCodes.INVALID_STATE_TRANSITION, "Order is not in dispute")
     
+    notification_type = None
     if resolution == "refund":
         # Refund buyer
         await refund_escrow(db, order.buyer_id, order.amount_usd, order.id, f"Refund for order {order.order_number}")
         order.status = OrderStatus.REFUNDED
         order.refunded_at = datetime.now(timezone.utc)
+        notification_type = "order_refunded"
     elif resolution == "complete":
         # Complete in favor of seller
         await release_escrow_to_pending(
@@ -409,6 +411,7 @@ async def resolve_dispute(db: AsyncSession, order_id: UUID, admin_id: UUID, reso
         order.completed_by = "admin"
         order.seller_pending_release_at = datetime.now(timezone.utc) + timedelta(days=10)
         await update_seller_stats(db, order.seller_id, order.amount_usd)
+        notification_type = "order_completed"
     else:
         raise AppException(ErrorCodes.VALIDATION_ERROR, "Invalid resolution")
     
@@ -427,7 +430,21 @@ async def resolve_dispute(db: AsyncSession, order_id: UUID, admin_id: UUID, reso
         )
         .where(Order.id == order_id)
     )
-    return result.scalar_one()
+    order = result.scalar_one()
+    
+    # Send email notifications based on resolution
+    if notification_type and order.buyer:
+        send_order_email_async(
+            order.buyer.email, order.order_number, notification_type,
+            {"amount": order.amount_usd, "order_id": str(order.id), "frontend_url": FRONTEND_URL}
+        )
+    if notification_type and order.seller:
+        send_order_email_async(
+            order.seller.email, order.order_number, notification_type,
+            {"amount": order.seller_earnings_usd, "order_id": str(order.id), "frontend_url": FRONTEND_URL}
+        )
+    
+    return order
 
 
 async def cancel_order(db: AsyncSession, order_id: UUID, user_id: UUID) -> Order:
