@@ -14,8 +14,13 @@ class EmailDeliveryError(Exception):
 def get_brevo_api():
     """Get Brevo/Sendinblue API instance"""
     api_key = os.getenv('SENDGRID_API_KEY')  # Using same env var for compatibility
-    if not api_key or not api_key.startswith('xkeysib-'):
-        logger.warning("Brevo API key not configured or invalid format")
+    if not api_key:
+        logger.warning("Email API key not configured")
+        return None
+    
+    # Support both Brevo (xkeysib-) and SendGrid (SG.) style keys
+    if not (api_key.startswith('xkeysib-') or api_key.startswith('SG.')):
+        logger.warning("Email API key format not recognized (expected xkeysib-* or SG.*)")
         return None
     
     configuration = sib_api_v3_sdk.Configuration()
