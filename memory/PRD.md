@@ -180,8 +180,37 @@ CREATE TABLE withdrawal_requests (
 
 ---
 
+## Changelog
+
+### February 4, 2026
+- **Fixed Core Marketplace Functionality**
+  - Fixed SQLAlchemy async relationship loading in `order_service.py` and `listing_service.py`
+  - All service functions now re-fetch models with `selectinload()` to eagerly load relationships
+  - Resolved `MissingGreenlet` errors when serializing responses
+- **Enhanced ChatPage.jsx with WebSocket Support**
+  - Added real-time WebSocket connection for instant messaging
+  - Live/Offline connection status indicator
+  - Typing indicator support
+  - Auto-reconnect on disconnect
+  - HTTP fallback when WebSocket unavailable
+- **Verified Working Flows**
+  - Listing creation, approval, and updates
+  - Full order lifecycle: create → deliver → complete/dispute
+  - Escrow system: buyer funds held, released to seller's pending balance after completion
+  - 10-day security hold on seller earnings
+  - Review submission on completed orders
+  - 24-hour dispute window after delivery
+  - Chat messaging with real-time updates
+
+### January 28, 2026
+- Super Admin System V2 modules completed
+- Homepage and Super Admin Dashboard redesigned
+- Admin scope enforcement on backend and frontend
+
+---
+
 ## Known Limitations
-- Wallet deposits/withdrawals not connected to real payment gateway (mocked)
+- Wallet deposits/withdrawals not connected to real payment gateway (MOCKED)
 - File storage uses local filesystem (not cloud S3)
 - Database migrations applied via direct SQL (no Alembic)
 
@@ -207,4 +236,4 @@ CREATE TABLE withdrawal_requests (
     └── package.json
 ```
 
-Last Updated: January 28, 2026
+Last Updated: February 4, 2026
