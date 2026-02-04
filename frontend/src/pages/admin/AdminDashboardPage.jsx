@@ -100,47 +100,65 @@ export default function AdminDashboardPage() {
       
       {/* Quick Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <Link to="/admin/listings">
-          <Card className="hover:border-yellow-500/50 transition-colors cursor-pointer" data-testid="pending-listings-card">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between mb-2">
-                <Package className="w-8 h-8 text-yellow-500" />
-                <span className="text-3xl font-bold text-yellow-500">
-                  {dashboard?.pending_listings || 0}
-                </span>
-              </div>
+        {/* Pending Listings */}
+        <Card 
+          className={`transition-colors cursor-pointer ${canReviewListings ? 'hover:border-yellow-500/50' : 'opacity-50'}`}
+          onClick={() => canReviewListings && navigate('/admin/pending-listings')}
+          data-testid="pending-listings-card"
+        >
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between mb-2">
+              <Package className="w-8 h-8 text-yellow-500" />
+              <span className="text-3xl font-bold text-yellow-500">
+                {dashboard?.pending_listings || 0}
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
               <p className="text-sm text-muted-foreground">Pending Listings</p>
-            </CardContent>
-          </Card>
-        </Link>
+              {!canReviewListings && <Lock className="w-4 h-4 text-muted-foreground" />}
+            </div>
+          </CardContent>
+        </Card>
         
-        <Link to="/admin/kyc">
-          <Card className="hover:border-blue-500/50 transition-colors cursor-pointer" data-testid="pending-kyc-card">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between mb-2">
-                <FileCheck className="w-8 h-8 text-blue-500" />
-                <span className="text-3xl font-bold text-blue-500">
-                  {dashboard?.pending_kyc || 0}
-                </span>
-              </div>
+        {/* Pending KYC */}
+        <Card 
+          className={`transition-colors cursor-pointer ${canReviewKYC ? 'hover:border-blue-500/50' : 'opacity-50'}`}
+          onClick={() => canReviewKYC && navigate('/admin/kyc-reviews')}
+          data-testid="pending-kyc-card"
+        >
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between mb-2">
+              <FileCheck className="w-8 h-8 text-blue-500" />
+              <span className="text-3xl font-bold text-blue-500">
+                {dashboard?.pending_kyc || 0}
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
               <p className="text-sm text-muted-foreground">Pending KYC</p>
-            </CardContent>
-          </Card>
-        </Link>
+              {!canReviewKYC && <Lock className="w-4 h-4 text-muted-foreground" />}
+            </div>
+          </CardContent>
+        </Card>
         
-        <Link to="/admin/disputes">
-          <Card className="hover:border-red-500/50 transition-colors cursor-pointer" data-testid="disputed-orders-card">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between mb-2">
-                <AlertTriangle className="w-8 h-8 text-red-500" />
-                <span className="text-3xl font-bold text-red-500">
-                  {dashboard?.disputed_orders || 0}
-                </span>
-              </div>
+        {/* Disputed Orders */}
+        <Card 
+          className={`transition-colors cursor-pointer ${canResolveDisputes ? 'hover:border-red-500/50' : 'opacity-50'}`}
+          onClick={() => canResolveDisputes && navigate('/admin/disputes')}
+          data-testid="disputed-orders-card"
+        >
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between mb-2">
+              <AlertTriangle className="w-8 h-8 text-red-500" />
+              <span className="text-3xl font-bold text-red-500">
+                {dashboard?.disputed_orders || 0}
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
               <p className="text-sm text-muted-foreground">Disputed Orders</p>
-            </CardContent>
-          </Card>
-        </Link>
+              {!canResolveDisputes && <Lock className="w-4 h-4 text-muted-foreground" />}
+            </div>
+          </CardContent>
+        </Card>
         
         <Card data-testid="active-orders-card">
           <CardContent className="p-4">
