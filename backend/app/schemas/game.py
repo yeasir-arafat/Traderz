@@ -70,6 +70,7 @@ class GameResponse(BaseModel):
     image_url: Optional[str]
     icon_url: Optional[str] = None
     buyer_note_html: Optional[str] = None
+    regions: List[str] = []  # Game-specific regions
     is_active: bool
     display_order: int
     created_at: datetime
