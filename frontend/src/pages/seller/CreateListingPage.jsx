@@ -146,7 +146,7 @@ export default function CreateListingPage() {
         const formDataUpload = new FormData();
         formDataUpload.append('file', file);
         
-        const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/upload/image`, {
+        const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/upload/listing`, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`
