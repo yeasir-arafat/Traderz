@@ -386,5 +386,15 @@ async def cancel_order(db: AsyncSession, order_id: UUID, user_id: UUID) -> Order
     order.cancelled_at = datetime.now(timezone.utc)
     
     await db.commit()
-    await db.refresh(order)
-    return order
+    
+    # Re-fetch with relationships loaded
+    result = await db.execute(
+        select(Order)
+        .options(
+            selectinload(Order.buyer),
+            selectinload(Order.seller),
+            selectinload(Order.listing)
+        )
+        .where(Order.id == order_id)
+    )
+    return result.scalar_one()
