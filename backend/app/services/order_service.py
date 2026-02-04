@@ -217,8 +217,18 @@ async def deliver_order(db: AsyncSession, order_id: UUID, seller_id: UUID, deliv
     order.delivered_at = datetime.now(timezone.utc)
     
     await db.commit()
-    await db.refresh(order)
-    return order
+    
+    # Re-fetch with relationships loaded
+    result = await db.execute(
+        select(Order)
+        .options(
+            selectinload(Order.buyer),
+            selectinload(Order.seller),
+            selectinload(Order.listing)
+        )
+        .where(Order.id == order_id)
+    )
+    return result.scalar_one()
 
 
 async def complete_order(db: AsyncSession, order_id: UUID, user_id: UUID, completed_by: str = "buyer") -> Order:
