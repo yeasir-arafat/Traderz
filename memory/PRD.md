@@ -22,6 +22,9 @@ A full-stack game account marketplace with wallet/escrow system, real-time chat,
 - Real-time chat via WebSocket with live connection indicator
 - Review submission after order completion
 - Dispute functionality with 24-hour window after delivery
+- **Notifications page with mark-read functionality**
+- **Seller public profile page** (`/seller/{username}`) with listings, reviews, stats
+- **Password recovery flow with real email delivery via Brevo/Sendinblue**
 
 ### Seller Features (Complete)
 - Create/edit listings with images
