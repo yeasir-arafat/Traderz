@@ -138,6 +138,85 @@ async def get_seller_profile(db: AsyncSession, seller_id: UUID) -> dict:
     }
 
 
+async def get_seller_public_profile(db: AsyncSession, username: str) -> dict:
+    """Get public seller profile by username"""
+    result = await db.execute(
+        select(User).where(User.username == username.lower())
+    )
+    seller = result.scalar_one_or_none()
+    
+    if not seller or "seller" not in seller.roles:
+        raise AppException(ErrorCodes.NOT_FOUND, "Seller not found", 404)
+    
+    # Get active listings
+    listings_result = await db.execute(
+        select(Listing)
+        .options(selectinload(Listing.game))
+        .where(
+            Listing.seller_id == seller.id,
+            Listing.status == ListingStatus.APPROVED
+        )
+        .order_by(Listing.created_at.desc())
+        .limit(12)
+    )
+    listings = listings_result.scalars().all()
+    
+    # Get active listings count
+    count_result = await db.execute(
+        select(func.count(Listing.id)).where(
+            Listing.seller_id == seller.id,
+            Listing.status == ListingStatus.APPROVED
+        )
+    )
+    total_listings = count_result.scalar() or 0
+    
+    # Get recent reviews with reviewer info
+    reviews_result = await db.execute(
+        select(Review)
+        .options(selectinload(Review.reviewer))
+        .where(Review.reviewee_id == seller.id)
+        .order_by(Review.created_at.desc())
+        .limit(10)
+    )
+    reviews = reviews_result.scalars().all()
+    
+    return {
+        "id": str(seller.id),
+        "username": seller.username,
+        "full_name": seller.full_name,
+        "seller_level": seller.seller_level,
+        "seller_rating": seller.seller_rating,
+        "total_reviews": seller.total_reviews,
+        "total_sales": int(seller.total_sales_volume_usd / 50) if seller.total_sales_volume_usd else 0,  # Approximate
+        "kyc_verified": seller.kyc_status == "approved",
+        "member_since": seller.created_at.isoformat(),
+        "total_listings": total_listings,
+        "listings": [
+            {
+                "id": str(listing.id),
+                "title": listing.title,
+                "price_usd": listing.price_usd,
+                "game_name": listing.game.name if listing.game else None,
+                "game_slug": listing.game.slug if listing.game else None,
+                "images": listing.images or [],
+                "account_level": listing.account_level,
+                "account_rank": listing.account_rank,
+            }
+            for listing in listings
+        ],
+        "reviews": [
+            {
+                "id": str(review.id),
+                "rating": review.rating,
+                "comment": review.comment,
+                "reviewer_username": review.reviewer.username if review.reviewer else "Anonymous",
+                "created_at": review.created_at.isoformat()
+            }
+            for review in reviews
+        ]
+    }
+
+
 async def update_seller_stats(db: AsyncSession, seller_id: UUID, order_amount_usd: float):
     """Update seller stats after completed order"""
     result = await db.execute(
