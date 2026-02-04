@@ -91,6 +91,44 @@ def require_super_admin(user: User = Depends(get_current_user)) -> User:
     return user
 
 
+def require_admin_scope(*scopes: str):
+    """
+    Dependency to require specific admin scopes.
+    Super admins bypass all scope checks.
+    Regular admins must have at least one of the specified scopes.
+    """
+    async def check_scopes(user: User = Depends(get_current_user)) -> User:
+        # Must be at least admin
+        if "admin" not in user.roles and "super_admin" not in user.roles:
+            raise AppException(ErrorCodes.AUTHORIZATION_ERROR, "Admin access required", 403)
+        
+        # Super admin bypasses all scope checks
+        if "super_admin" in user.roles:
+            return user
+        
+        # Check if admin has required scope
+        admin_permissions = user.admin_permissions or []
+        if not any(scope in admin_permissions for scope in scopes):
+            raise AppException(
+                ErrorCodes.AUTHORIZATION_ERROR, 
+                f"Insufficient scope. Required: {', '.join(scopes)}", 
+                403,
+                details={"code": "INSUFFICIENT_SCOPE", "required_scopes": list(scopes)}
+            )
+        
+        return user
+    return check_scopes
+
+
+# Pre-built scope dependencies for common use cases
+require_listings_review = require_admin_scope("LISTINGS_REVIEW")
+require_kyc_review = require_admin_scope("KYC_REVIEW")
+require_dispute_resolve = require_admin_scope("DISPUTE_RESOLVE")
+require_faq_edit = require_admin_scope("FAQ_EDIT")
+require_finance_view = require_admin_scope("FINANCE_VIEW")
+require_finance_action = require_admin_scope("FINANCE_ACTION")
+
+
 def require_terms_accepted(user: User = Depends(get_current_user)) -> User:
     """Require terms acceptance"""
     if not user.terms_accepted:
