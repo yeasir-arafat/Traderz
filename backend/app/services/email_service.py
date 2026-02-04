@@ -47,7 +47,7 @@ def send_email(
         True if email sent successfully, False otherwise
     """
     api_instance = get_brevo_api()
-    sender_email = os.getenv('SENDER_EMAIL', 'noreply@playtraderz.com')
+    sender_email = settings.SENDER_EMAIL
     
     if not api_instance:
         # Log the email instead if Brevo not configured
