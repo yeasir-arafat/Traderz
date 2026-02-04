@@ -31,6 +31,7 @@ A full-stack game account marketplace with wallet/escrow system, real-time chat,
 - Listing review and approval
 - KYC review
 - Admin dashboard with pending items
+- **Scope-based access control with UI indicators**
 
 ### Super Admin System V2 (Complete - Jan 28, 2026)
 All modules implemented with audit logging and step-up confirmation:
@@ -39,6 +40,7 @@ All modules implemented with audit logging and step-up confirmation:
    - Create/edit games with buyer_note_html
    - Toggle game active status
    - Platform fee rules
+   - **buyer_note_html displayed on listing detail pages**
 
 2. **Order Management** ✅
    - View all orders with search/filter
@@ -71,6 +73,18 @@ All modules implemented with audit logging and step-up confirmation:
    - Granular scopes: LISTINGS_REVIEW, KYC_REVIEW, DISPUTE_RESOLVE, FAQ_EDIT, FINANCE_VIEW, FINANCE_ACTION
    - One-click presets: Moderator, KYC Reviewer, Content Admin, Ops Admin
    - Super admin bypasses all scopes
+   - **Backend enforcement with INSUFFICIENT_SCOPE error**
+   - **Frontend UI hides/locks buttons when scope missing**
+
+### UI/UX Updates (Jan 2026)
+- **Super Admin Dashboard redesigned** with modern mobile-first design
+  - Admin Hub header with animated "System Stable" indicator
+  - Key Metrics horizontal scroll carousel
+  - Action Center 2x2 grid with pending badges
+  - Financial Flow chart with SVG
+  - Fixed bottom navigation bar
+- **Admin Dashboard** shows user's active scopes as badges
+- **Listing Detail Page** displays game-specific buyer notes
 
 ---
 
