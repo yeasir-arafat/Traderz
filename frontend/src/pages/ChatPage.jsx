@@ -164,15 +164,61 @@ export default function ChatPage() {
     e.preventDefault();
     if (!newMessage.trim() || !conversationId) return;
     
-    setSending(true);
-    try {
-      const message = await chatsAPI.sendMessage(conversationId, newMessage.trim());
-      setMessages([...messages, message]);
-      setNewMessage('');
-    } catch (error) {
-      toast.error('Failed to send message');
-    } finally {
-      setSending(false);
+    const messageContent = newMessage.trim();
+    setNewMessage('');
+    
+    // Send via WebSocket if connected
+    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+      wsRef.current.send(JSON.stringify({
+        type: 'message',
+        conversation_id: conversationId,
+        content: messageContent
+      }));
+      // Clear typing indicator
+      wsRef.current.send(JSON.stringify({
+        type: 'typing',
+        conversation_id: conversationId,
+        is_typing: false
+      }));
+    } else {
+      // Fallback to HTTP API
+      setSending(true);
+      try {
+        const message = await chatsAPI.sendMessage(conversationId, messageContent);
+        setMessages([...messages, message]);
+      } catch (error) {
+        toast.error('Failed to send message');
+        setNewMessage(messageContent); // Restore message on failure
+      } finally {
+        setSending(false);
+      }
+    }
+  };
+  
+  const handleTyping = (e) => {
+    setNewMessage(e.target.value);
+    
+    // Send typing indicator
+    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN && conversationId) {
+      wsRef.current.send(JSON.stringify({
+        type: 'typing',
+        conversation_id: conversationId,
+        is_typing: true
+      }));
+      
+      // Clear typing after 2 seconds of no input
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+      typingTimeoutRef.current = setTimeout(() => {
+        if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+          wsRef.current.send(JSON.stringify({
+            type: 'typing',
+            conversation_id: conversationId,
+            is_typing: false
+          }));
+        }
+      }, 2000);
     }
   };
   
