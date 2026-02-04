@@ -21,6 +21,8 @@ import NotFoundPage from './pages/NotFoundPage';
 import KycPage from './pages/KycPage';
 import NotificationsPage from './pages/NotificationsPage';
 import SellerProfilePage from './pages/SellerProfilePage';
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
+import ResetPasswordPage from './pages/ResetPasswordPage';
 
 // Seller Pages
 import MyListingsPage from './pages/seller/MyListingsPage';
