@@ -97,6 +97,7 @@ class UserResponse(BaseModel):
     country: Optional[str] = None
     postal_code: Optional[str] = None
     roles: List[str]
+    admin_permissions: Optional[List[str]] = None  # Admin scopes
     auth_provider: str
     terms_accepted: bool
     profile_completed: bool
