@@ -1,104 +1,20 @@
 import React, { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import {
   Shield, Users, Package, FileCheck, AlertTriangle, ShoppingCart,
   Loader2, TrendingUp, TrendingDown, DollarSign, Wallet, Lock,
-  Clock, CheckCircle, XCircle, Activity, Database, RefreshCw,
-  ChevronRight, Eye, UserCog, Settings, ScrollText, Layers, Gavel
+  Clock, CheckCircle, XCircle, Activity, RefreshCw, Store,
+  ChevronRight, UserCog, Settings, ScrollText, Layers, Gavel,
+  CreditCard, HeadphonesIcon, Plus, Home, BarChart3
 } from 'lucide-react';
 import { Button } from '../../components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
-import { Badge } from '../../components/ui/badge';
 import { superAdminAPI } from '../../lib/api';
-import { useAuthStore, useCurrencyStore } from '../../store';
-import { formatCurrency } from '../../lib/utils';
+import { useAuthStore } from '../../store';
 import { toast } from 'sonner';
-import {
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell, BarChart, Bar, Legend
-} from 'recharts';
-
-const CHART_COLORS = ['#22c55e', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
-
-// KPI Card Component
-function KPICard({ icon: Icon, label, value, change, trend, color = 'primary', onClick, testId }) {
-  const colorClasses = {
-    primary: 'text-primary border-primary/30',
-    green: 'text-green-500 border-green-500/30',
-    blue: 'text-blue-500 border-blue-500/30',
-    yellow: 'text-yellow-500 border-yellow-500/30',
-    red: 'text-red-500 border-red-500/30',
-    purple: 'text-purple-500 border-purple-500/30',
-  };
-
-  return (
-    <Card 
-      className={`hover:border-${color}/50 transition-colors ${onClick ? 'cursor-pointer' : ''}`}
-      onClick={onClick}
-      data-testid={testId}
-    >
-      <CardContent className="p-4">
-        <div className="flex items-center justify-between mb-2">
-          <Icon className={`w-6 h-6 ${colorClasses[color]?.split(' ')[0] || 'text-primary'}`} />
-          {trend && (
-            <div className={`flex items-center text-xs ${trend === 'up' ? 'text-green-500' : 'text-red-500'}`}>
-              {trend === 'up' ? <TrendingUp className="w-3 h-3 mr-1" /> : <TrendingDown className="w-3 h-3 mr-1" />}
-              {change && `${change > 0 ? '+' : ''}${change.toFixed(1)}%`}
-            </div>
-          )}
-        </div>
-        <p className="text-2xl font-bold">{typeof value === 'number' ? value.toLocaleString() : value}</p>
-        <p className="text-xs text-muted-foreground mt-1">{label}</p>
-      </CardContent>
-    </Card>
-  );
-}
-
-// Finance Stat Card
-function FinanceCard({ label, value, icon: Icon, color = 'green' }) {
-  const colorClasses = {
-    green: 'text-green-500 bg-green-500/10',
-    blue: 'text-blue-500 bg-blue-500/10',
-    yellow: 'text-yellow-500 bg-yellow-500/10',
-    red: 'text-red-500 bg-red-500/10',
-    purple: 'text-purple-500 bg-purple-500/10',
-  };
-
-  return (
-    <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
-      <div className={`p-2 rounded-lg ${colorClasses[color]}`}>
-        <Icon className="w-4 h-4" />
-      </div>
-      <div>
-        <p className="text-lg font-bold">{value}</p>
-        <p className="text-xs text-muted-foreground">{label}</p>
-      </div>
-    </div>
-  );
-}
-
-// Action Queue Item
-function ActionQueueItem({ title, subtitle, time, onAction, actionLabel = 'Review' }) {
-  return (
-    <div className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50 transition-colors">
-      <div className="min-w-0 flex-1">
-        <p className="font-medium truncate">{title}</p>
-        <p className="text-xs text-muted-foreground">{subtitle}</p>
-      </div>
-      <div className="flex items-center gap-2 ml-2">
-        <span className="text-xs text-muted-foreground whitespace-nowrap">{time}</span>
-        <Button size="sm" variant="outline" onClick={onAction}>
-          {actionLabel}
-        </Button>
-      </div>
-    </div>
-  );
-}
 
 export default function SuperAdminDashboardPage() {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuthStore();
-  const { currency, usdToBdtRate } = useCurrencyStore();
   
   const [dashboard, setDashboard] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -136,19 +52,26 @@ export default function SuperAdminDashboardPage() {
   };
   
   const formatTime = (isoString) => {
+    if (!isoString) return '';
     const date = new Date(isoString);
     const now = new Date();
     const diff = now - date;
     
-    if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
-    if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
+    if (diff < 3600000) return `${Math.floor(diff / 60000)}m`;
+    if (diff < 86400000) return `${Math.floor(diff / 3600000)}h`;
     return date.toLocaleDateString();
+  };
+
+  const formatCurrency = (amount) => {
+    if (amount >= 1000000) return `$${(amount / 1000000).toFixed(1)}M`;
+    if (amount >= 1000) return `$${(amount / 1000).toFixed(1)}k`;
+    return `$${amount?.toFixed(2) || '0'}`;
   };
   
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-8 flex justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      <div className="min-h-screen bg-[#101722] flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
       </div>
     );
   }
@@ -156,560 +79,392 @@ export default function SuperAdminDashboardPage() {
   const finance = dashboard?.finance || {};
   
   return (
-    <div className="container mx-auto px-4 py-6 max-w-7xl">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <Shield className="w-8 h-8 text-primary" />
-          <div>
-            <h1 className="text-2xl font-heading font-bold">Super Admin Dashboard</h1>
-            <p className="text-sm text-muted-foreground">Platform owner controls</p>
+    <div className="min-h-screen bg-[#101722] text-white font-sans antialiased pb-24" data-testid="superadmin-dashboard">
+      {/* System Pulse Header */}
+      <header className="sticky top-0 z-50 bg-[#101722]/90 backdrop-blur-md border-b border-gray-800">
+        <div className="flex items-center justify-between p-4">
+          <div className="flex items-center gap-3">
+            <div className="relative">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center ring-2 ring-blue-500/20">
+                <Shield className="w-5 h-5 text-white" />
+              </div>
+              <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-[#101722] rounded-full"></span>
+            </div>
+            <div>
+              <h2 className="text-lg font-bold leading-tight tracking-tight">Admin Hub</h2>
+              <p className="text-xs text-slate-400 font-medium">Welcome back, {user?.username || 'Admin'}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={() => fetchDashboard(true)}
+              disabled={refreshing}
+              className="text-slate-400 hover:text-white"
+            >
+              <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+            </Button>
+            <div className="flex items-center gap-2 bg-emerald-500/10 px-3 py-1.5 rounded-full border border-emerald-500/20">
+              <span className="relative flex h-2.5 w-2.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+              </span>
+              <p className="text-emerald-500 text-xs font-bold uppercase tracking-wide">System Stable</p>
+            </div>
           </div>
         </div>
-        
-        <div className="flex items-center gap-2">
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={() => fetchDashboard(true)}
-            disabled={refreshing}
+      </header>
+
+      {/* Key Metrics Carousel */}
+      <section className="mt-4">
+        <div className="flex overflow-x-auto gap-4 px-4 pb-2 snap-x snap-mandatory scrollbar-hide">
+          {/* Card 1: Total Users */}
+          <div className="snap-center shrink-0 min-w-[240px] flex-1 flex flex-col gap-1 rounded-xl p-5 bg-[#1e2736]/80 backdrop-blur-md border border-white/5 relative overflow-hidden group">
+            <div className="absolute -right-6 -top-6 w-24 h-24 bg-blue-500/10 rounded-full blur-2xl group-hover:bg-blue-500/20 transition-all"></div>
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-slate-400 text-sm font-medium">Total Users</p>
+              <Users className="w-5 h-5 text-blue-500" />
+            </div>
+            <p className="text-3xl font-bold tracking-tight">{(dashboard?.total_users || 0).toLocaleString()}</p>
+            <div className="flex items-center gap-1 mt-1">
+              <TrendingUp className="w-4 h-4 text-emerald-500" />
+              <p className="text-emerald-500 text-sm font-bold">+12%</p>
+              <p className="text-slate-500 text-xs ml-1">vs last month</p>
+            </div>
+          </div>
+
+          {/* Card 2: Active Sellers */}
+          <div className="snap-center shrink-0 min-w-[240px] flex-1 flex flex-col gap-1 rounded-xl p-5 bg-[#1e2736]/80 backdrop-blur-md border border-white/5 relative overflow-hidden group">
+            <div className="absolute -right-6 -top-6 w-24 h-24 bg-purple-500/10 rounded-full blur-2xl group-hover:bg-purple-500/20 transition-all"></div>
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-slate-400 text-sm font-medium">Active Sellers</p>
+              <Store className="w-5 h-5 text-purple-500" />
+            </div>
+            <p className="text-3xl font-bold tracking-tight">{(dashboard?.total_sellers || 0).toLocaleString()}</p>
+            <div className="flex items-center gap-1 mt-1">
+              <TrendingUp className="w-4 h-4 text-emerald-500" />
+              <p className="text-emerald-500 text-sm font-bold">+5%</p>
+              <p className="text-slate-500 text-xs ml-1">vs last month</p>
+            </div>
+          </div>
+
+          {/* Card 3: GMV Revenue */}
+          <div className="snap-center shrink-0 min-w-[240px] flex-1 flex flex-col gap-1 rounded-xl p-5 bg-[#1e2736]/80 backdrop-blur-md border border-white/5 relative overflow-hidden group">
+            <div className="absolute -right-6 -top-6 w-24 h-24 bg-emerald-500/10 rounded-full blur-2xl group-hover:bg-emerald-500/20 transition-all"></div>
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-slate-400 text-sm font-medium">GMV Revenue</p>
+              <DollarSign className="w-5 h-5 text-emerald-500" />
+            </div>
+            <p className="text-3xl font-bold tracking-tight">{formatCurrency(finance?.total_volume_usd || 0)}</p>
+            <div className="flex items-center gap-1 mt-1">
+              <TrendingUp className="w-4 h-4 text-emerald-500" />
+              <p className="text-emerald-500 text-sm font-bold">+8.2%</p>
+              <p className="text-slate-500 text-xs ml-1">vs last month</p>
+            </div>
+          </div>
+
+          {/* Card 4: Orders */}
+          <div className="snap-center shrink-0 min-w-[240px] flex-1 flex flex-col gap-1 rounded-xl p-5 bg-[#1e2736]/80 backdrop-blur-md border border-white/5 relative overflow-hidden group">
+            <div className="absolute -right-6 -top-6 w-24 h-24 bg-orange-500/10 rounded-full blur-2xl group-hover:bg-orange-500/20 transition-all"></div>
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-slate-400 text-sm font-medium">Total Orders</p>
+              <ShoppingCart className="w-5 h-5 text-orange-500" />
+            </div>
+            <p className="text-3xl font-bold tracking-tight">{(dashboard?.total_orders || 0).toLocaleString()}</p>
+            <div className="flex items-center gap-1 mt-1">
+              <CheckCircle className="w-4 h-4 text-emerald-500" />
+              <p className="text-slate-400 text-sm">{dashboard?.completed_orders || 0} completed</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Action Center */}
+      <section className="px-4 mt-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-bold tracking-tight">Action Center</h2>
+          <button className="text-blue-500 text-sm font-bold hover:text-blue-400 transition-colors">View All</button>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          {/* KYC Requests */}
+          <button 
+            onClick={() => navigate('/admin/kyc-reviews')}
+            className="relative flex flex-col items-start justify-between h-40 p-5 rounded-2xl bg-gradient-to-br from-[#1e2736] to-[#161d29] border border-white/5 hover:border-blue-500/50 transition-colors active:scale-95 duration-200"
+            data-testid="action-kyc"
           >
-            <RefreshCw className={`w-4 h-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
-            Refresh
-          </Button>
-          <Button size="sm" onClick={() => navigate('/superadmin/users')}>
-            <UserCog className="w-4 h-4 mr-2" />
-            Users
-          </Button>
-          <Button size="sm" onClick={() => navigate('/superadmin/orders')}>
-            <ShoppingCart className="w-4 h-4 mr-2" />
-            Orders
-          </Button>
-          <Button size="sm" onClick={() => navigate('/superadmin/games-fees')}>
-            <Layers className="w-4 h-4 mr-2" />
-            Games
-          </Button>
-          <Button size="sm" onClick={() => navigate('/superadmin/withdrawals')}>
-            <Wallet className="w-4 h-4 mr-2" />
-            Withdrawals
-          </Button>
-          <Button size="sm" onClick={() => navigate('/superadmin/moderation')}>
-            <Gavel className="w-4 h-4 mr-2" />
-            Moderation
-          </Button>
-          <Button size="sm" onClick={() => navigate('/superadmin/giftcards')}>
-            <DollarSign className="w-4 h-4 mr-2" />
-            Gift Cards
-          </Button>
-          <Button size="sm" onClick={() => navigate('/superadmin/finance')}>
-            <Wallet className="w-4 h-4 mr-2" />
-            Finance
-          </Button>
-          <Button size="sm" variant="outline" onClick={() => navigate('/superadmin/system-health')}>
-            <Activity className="w-4 h-4 mr-2" />
-            Health
-          </Button>
+            <div className="bg-blue-500/20 p-3 rounded-full text-blue-400">
+              <FileCheck className="w-6 h-6" />
+            </div>
+            <div className="text-left">
+              <p className="text-base font-bold text-white leading-tight">KYC Requests</p>
+              <p className="text-sm text-slate-400 mt-1">Identity verification</p>
+            </div>
+            {dashboard?.pending_kyc > 0 && (
+              <div className="absolute top-4 right-4 bg-red-500 text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-lg shadow-red-500/20">
+                {dashboard.pending_kyc} Pending
+              </div>
+            )}
+          </button>
+
+          {/* Disputes */}
+          <button 
+            onClick={() => navigate('/superadmin/orders')}
+            className="relative flex flex-col items-start justify-between h-40 p-5 rounded-2xl bg-gradient-to-br from-[#1e2736] to-[#161d29] border border-white/5 hover:border-orange-500/50 transition-colors active:scale-95 duration-200"
+            data-testid="action-disputes"
+          >
+            <div className="bg-orange-500/20 p-3 rounded-full text-orange-400">
+              <Gavel className="w-6 h-6" />
+            </div>
+            <div className="text-left">
+              <p className="text-base font-bold text-white leading-tight">Disputes</p>
+              <p className="text-sm text-slate-400 mt-1">Resolution center</p>
+            </div>
+            {dashboard?.disputed_orders > 0 && (
+              <div className="absolute top-4 right-4 bg-orange-500 text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-lg shadow-orange-500/20">
+                {dashboard.disputed_orders} Urgent
+              </div>
+            )}
+          </button>
+
+          {/* Listings */}
+          <button 
+            onClick={() => navigate('/admin/pending-listings')}
+            className="relative flex flex-col items-start justify-between h-40 p-5 rounded-2xl bg-gradient-to-br from-[#1e2736] to-[#161d29] border border-white/5 hover:border-emerald-500/50 transition-colors active:scale-95 duration-200"
+            data-testid="action-listings"
+          >
+            <div className="bg-emerald-500/20 p-3 rounded-full text-emerald-400">
+              <Package className="w-6 h-6" />
+            </div>
+            <div className="text-left">
+              <p className="text-base font-bold text-white leading-tight">Listings</p>
+              <p className="text-sm text-slate-400 mt-1">Quality control</p>
+            </div>
+            {dashboard?.pending_listings > 0 && (
+              <div className="absolute top-4 right-4 bg-[#1e2736] border border-white/10 text-slate-300 text-[10px] font-bold px-2 py-1 rounded-full">
+                {dashboard.pending_listings} Review
+              </div>
+            )}
+          </button>
+
+          {/* Withdrawals */}
+          <button 
+            onClick={() => navigate('/superadmin/withdrawals')}
+            className="relative flex flex-col items-start justify-between h-40 p-5 rounded-2xl bg-gradient-to-br from-[#1e2736] to-[#161d29] border border-white/5 hover:border-purple-500/50 transition-colors active:scale-95 duration-200"
+            data-testid="action-withdrawals"
+          >
+            <div className="bg-purple-500/20 p-3 rounded-full text-purple-400">
+              <Wallet className="w-6 h-6" />
+            </div>
+            <div className="text-left">
+              <p className="text-base font-bold text-white leading-tight">Withdrawals</p>
+              <p className="text-sm text-slate-400 mt-1">Payout requests</p>
+            </div>
+            {dashboard?.pending_withdrawals > 0 && (
+              <div className="absolute top-4 right-4 bg-purple-500 text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-lg shadow-purple-500/20">
+                {dashboard.pending_withdrawals} Pending
+              </div>
+            )}
+          </button>
         </div>
-      </div>
-      
-      {/* Secondary Nav Row */}
-      <div className="flex flex-wrap gap-2 mb-6">
-        <Button size="sm" variant="outline" onClick={() => navigate('/superadmin/admin-scopes')}>
-          <Lock className="w-4 h-4 mr-2" />
-          Admin Scopes
-        </Button>
-        <Button size="sm" variant="outline" onClick={() => navigate('/superadmin/audit-logs')}>
-          <ScrollText className="w-4 h-4 mr-2" />
-          Audit Logs
-        </Button>
-        <Button size="sm" variant="outline" onClick={() => navigate('/superadmin/config')}>
-          <Settings className="w-4 h-4 mr-2" />
-          Config
-        </Button>
-        <Button size="sm" variant="outline" onClick={() => navigate('/superadmin/legal')}>
-          <ScrollText className="w-4 h-4 mr-2" />
-          Legal
-        </Button>
-      </div>
-      
-      {/* KPI Cards - Top Row */}
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3 mb-6">
-        <KPICard
-          icon={Users}
-          label="Total Users"
-          value={dashboard?.total_users || 0}
-          color="blue"
-          testId="kpi-total-users"
-        />
-        <KPICard
-          icon={Users}
-          label="Sellers"
-          value={dashboard?.total_sellers || 0}
-          color="purple"
-          testId="kpi-sellers"
-        />
-        <KPICard
-          icon={Package}
-          label="Active Listings"
-          value={dashboard?.active_listings || 0}
-          color="green"
-          testId="kpi-active-listings"
-        />
-        <KPICard
-          icon={Clock}
-          label="Pending Listings"
-          value={dashboard?.pending_listings || 0}
-          color="yellow"
-          onClick={() => navigate('/admin/listings')}
-          testId="kpi-pending-listings"
-        />
-        <KPICard
-          icon={FileCheck}
-          label="Pending KYC"
-          value={dashboard?.pending_kyc || 0}
-          color="blue"
-          onClick={() => navigate('/admin/kyc')}
-          testId="kpi-pending-kyc"
-        />
-        <KPICard
-          icon={AlertTriangle}
-          label="Disputes"
-          value={dashboard?.disputed_orders || 0}
-          color="red"
-          onClick={() => navigate('/admin/disputes')}
-          testId="kpi-disputes"
-        />
-        <KPICard
-          icon={ShoppingCart}
-          label="In Delivery"
-          value={dashboard?.orders_in_delivery || 0}
-          color="primary"
-          testId="kpi-in-delivery"
-        />
-        <KPICard
-          icon={DollarSign}
-          label="Earnings (7d)"
-          value={formatCurrency(dashboard?.platform_earnings_7d || 0, currency, usdToBdtRate)}
-          color="green"
-          testId="kpi-earnings"
-        />
-      </div>
-      
-      {/* Finance Section */}
-      <Card className="mb-6">
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2">
-            <Wallet className="w-5 h-5 text-primary" />
-            Finance Overview
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
-            <FinanceCard
-              icon={TrendingUp}
-              label="Total Deposits"
-              value={formatCurrency(finance.total_deposits_usd || 0, currency, usdToBdtRate)}
-              color="green"
-            />
-            <FinanceCard
-              icon={TrendingDown}
-              label="Withdrawals Paid"
-              value={formatCurrency(finance.total_withdrawals_usd || 0, currency, usdToBdtRate)}
-              color="red"
-            />
-            <FinanceCard
-              icon={Lock}
-              label="Escrow Held"
-              value={formatCurrency(finance.total_escrow_held_usd || 0, currency, usdToBdtRate)}
-              color="yellow"
-            />
-            <FinanceCard
-              icon={Clock}
-              label="Seller Pending"
-              value={formatCurrency(finance.total_seller_pending_usd || 0, currency, usdToBdtRate)}
-              color="blue"
-            />
-            <FinanceCard
-              icon={Lock}
-              label="Frozen Funds"
-              value={formatCurrency(finance.total_frozen_usd || 0, currency, usdToBdtRate)}
-              color="red"
-            />
-            <FinanceCard
-              icon={DollarSign}
-              label="Fees (All-time)"
-              value={formatCurrency(finance.platform_fee_all_time_usd || 0, currency, usdToBdtRate)}
-              color="green"
-            />
-            <FinanceCard
-              icon={DollarSign}
-              label="Fees (30d)"
-              value={formatCurrency(finance.platform_fee_30d_usd || 0, currency, usdToBdtRate)}
-              color="purple"
-            />
+      </section>
+
+      {/* Financial Flow */}
+      <section className="px-4 mt-8">
+        <div className="rounded-2xl bg-[#1e2736] border border-white/5 p-5">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="text-base font-medium text-slate-400">Financial Flow</h2>
+              <div className="flex items-end gap-2 mt-1">
+                <span className="text-2xl font-bold text-white">{formatCurrency(finance?.total_volume_usd || 0)}</span>
+                <span className="text-sm font-medium text-emerald-500 mb-1">+12% this week</span>
+              </div>
+            </div>
+            <button 
+              onClick={() => navigate('/superadmin/finance')}
+              className="bg-white/5 p-2 rounded-lg hover:bg-white/10 transition-colors"
+            >
+              <BarChart3 className="w-5 h-5 text-white" />
+            </button>
           </div>
-        </CardContent>
-      </Card>
-      
-      {/* Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        {/* Orders Over Time */}
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base">Orders (Last 14 Days)</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={dashboard?.orders_over_time || []}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#333" />
-                  <XAxis 
-                    dataKey="date" 
-                    tick={{ fill: '#888', fontSize: 10 }}
-                    tickFormatter={(val) => val.slice(5)}
-                  />
-                  <YAxis tick={{ fill: '#888', fontSize: 10 }} />
-                  <Tooltip 
-                    contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #333' }}
-                    labelStyle={{ color: '#888' }}
-                  />
-                  <Line 
-                    type="monotone" 
-                    dataKey="value" 
-                    stroke="#22c55e" 
-                    strokeWidth={2}
-                    dot={{ fill: '#22c55e', r: 3 }}
-                    name="Orders"
-                  />
-                </LineChart>
-              </ResponsiveContainer>
+
+          {/* Chart Area */}
+          <div className="w-full h-32 relative">
+            <svg className="w-full h-full overflow-visible" viewBox="0 0 400 120" preserveAspectRatio="none">
+              <defs>
+                <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.2" />
+                  <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
+                </linearGradient>
+              </defs>
+              <path
+                d="M0,80 C50,80 50,40 100,40 C150,40 150,90 200,60 C250,30 250,60 300,50 C350,40 350,10 400,10 V120 H0 Z"
+                fill="url(#chartGradient)"
+              />
+              <path
+                d="M0,80 C50,80 50,40 100,40 C150,40 150,90 200,60 C250,30 250,60 300,50 C350,40 350,10 400,10"
+                fill="none"
+                stroke="#3b82f6"
+                strokeWidth="3"
+                strokeLinecap="round"
+              />
+            </svg>
+            {/* Chart Labels */}
+            <div className="flex justify-between mt-2 text-xs font-medium text-slate-500">
+              <span>Mon</span>
+              <span>Tue</span>
+              <span>Wed</span>
+              <span>Thu</span>
+              <span>Fri</span>
+              <span>Sat</span>
+              <span>Sun</span>
             </div>
-          </CardContent>
-        </Card>
-        
-        {/* Revenue Over Time */}
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base">Platform Revenue (Last 14 Days)</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={dashboard?.revenue_over_time || []}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#333" />
-                  <XAxis 
-                    dataKey="date" 
-                    tick={{ fill: '#888', fontSize: 10 }}
-                    tickFormatter={(val) => val.slice(5)}
-                  />
-                  <YAxis tick={{ fill: '#888', fontSize: 10 }} />
-                  <Tooltip 
-                    contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #333' }}
-                    formatter={(val) => [`$${val.toFixed(2)}`, 'Revenue']}
-                  />
-                  <Bar dataKey="value" fill="#3b82f6" radius={[4, 4, 0, 0]} name="Revenue" />
-                </BarChart>
-              </ResponsiveContainer>
+          </div>
+
+          {/* Mini Stats Row */}
+          <div className="grid grid-cols-2 gap-4 mt-6 pt-4 border-t border-white/5">
+            <div>
+              <p className="text-xs text-slate-400 mb-1">Escrow Held</p>
+              <p className="text-lg font-bold text-white">{formatCurrency(finance?.escrow_held_usd || 0)}</p>
             </div>
-          </CardContent>
-        </Card>
-      </div>
-      
-      {/* Pie Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        {/* Listing Status Distribution */}
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base">Listing Status Distribution</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-48 flex items-center">
-              <ResponsiveContainer width="60%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={dashboard?.listing_status_distribution || []}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={40}
-                    outerRadius={70}
-                    paddingAngle={2}
-                    dataKey="value"
-                  >
-                    {(dashboard?.listing_status_distribution || []).map((entry, index) => (
-                      <Cell key={entry.name} fill={CHART_COLORS[index % CHART_COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip 
-                    contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #333' }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-              <div className="flex-1 space-y-1">
-                {(dashboard?.listing_status_distribution || []).map((entry, index) => (
-                  <div key={entry.name} className="flex items-center gap-2 text-xs">
-                    <div 
-                      className="w-3 h-3 rounded-sm"
-                      style={{ backgroundColor: CHART_COLORS[index % CHART_COLORS.length] }}
-                    />
-                    <span className="capitalize">{entry.name}</span>
-                    <span className="ml-auto font-medium">{entry.value}</span>
-                  </div>
-                ))}
-              </div>
+            <div>
+              <p className="text-xs text-slate-400 mb-1">Platform Fees</p>
+              <p className="text-lg font-bold text-white">{formatCurrency(finance?.platform_earnings_usd || 0)}</p>
             </div>
-          </CardContent>
-        </Card>
-        
-        {/* KYC Status Distribution */}
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base">KYC Status Distribution</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-48 flex items-center">
-              <ResponsiveContainer width="60%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={dashboard?.kyc_status_distribution || []}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={40}
-                    outerRadius={70}
-                    paddingAngle={2}
-                    dataKey="value"
-                  >
-                    {(dashboard?.kyc_status_distribution || []).map((entry, index) => (
-                      <Cell key={entry.name} fill={CHART_COLORS[index % CHART_COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip 
-                    contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #333' }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-              <div className="flex-1 space-y-1">
-                {(dashboard?.kyc_status_distribution || []).map((entry, index) => (
-                  <div key={entry.name} className="flex items-center gap-2 text-xs">
-                    <div 
-                      className="w-3 h-3 rounded-sm"
-                      style={{ backgroundColor: CHART_COLORS[index % CHART_COLORS.length] }}
-                    />
-                    <span className="capitalize">{entry.name.replace('_', ' ')}</span>
-                    <span className="ml-auto font-medium">{entry.value}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-      
-      {/* Action Queues */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        {/* Pending Listings Queue */}
-        <Card>
-          <CardHeader className="pb-2">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-base flex items-center gap-2">
-                <Package className="w-4 h-4 text-yellow-500" />
-                Pending Listings
-              </CardTitle>
-              <Link to="/admin/listings">
-                <Button variant="ghost" size="sm">
-                  View All <ChevronRight className="w-4 h-4 ml-1" />
-                </Button>
-              </Link>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-1">
-            {(dashboard?.pending_listings_queue || []).length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-4">No pending listings</p>
-            ) : (
-              (dashboard?.pending_listings_queue || []).map((item) => (
-                <ActionQueueItem
-                  key={item.id}
-                  title={item.title}
-                  subtitle={`by ${item.seller}`}
-                  time={formatTime(item.created_at)}
-                  onAction={() => navigate('/admin/listings')}
-                />
-              ))
-            )}
-          </CardContent>
-        </Card>
-        
-        {/* Pending KYC Queue */}
-        <Card>
-          <CardHeader className="pb-2">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-base flex items-center gap-2">
-                <FileCheck className="w-4 h-4 text-blue-500" />
-                Pending KYC
-              </CardTitle>
-              <Link to="/admin/kyc">
-                <Button variant="ghost" size="sm">
-                  View All <ChevronRight className="w-4 h-4 ml-1" />
-                </Button>
-              </Link>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-1">
-            {(dashboard?.pending_kyc_queue || []).length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-4">No pending KYC</p>
-            ) : (
-              (dashboard?.pending_kyc_queue || []).map((item) => (
-                <ActionQueueItem
-                  key={item.id}
-                  title={item.user}
-                  subtitle={item.doc_type?.replace('_', ' ')}
-                  time={formatTime(item.created_at)}
-                  onAction={() => navigate('/admin/kyc')}
-                />
-              ))
-            )}
-          </CardContent>
-        </Card>
-        
-        {/* Recent Disputes */}
-        <Card>
-          <CardHeader className="pb-2">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-base flex items-center gap-2">
-                <AlertTriangle className="w-4 h-4 text-red-500" />
-                Recent Disputes
-              </CardTitle>
-              <Link to="/admin/disputes">
-                <Button variant="ghost" size="sm">
-                  View All <ChevronRight className="w-4 h-4 ml-1" />
-                </Button>
-              </Link>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-1">
-            {(dashboard?.recent_disputes || []).length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-4">No active disputes</p>
-            ) : (
-              (dashboard?.recent_disputes || []).map((item) => (
-                <ActionQueueItem
-                  key={item.id}
-                  title={item.order_number}
-                  subtitle={`$${item.amount?.toFixed(2)} • ${item.buyer} vs ${item.seller}`}
-                  time=""
-                  actionLabel="Resolve"
-                  onAction={() => navigate('/admin/disputes')}
-                />
-              ))
-            )}
-          </CardContent>
-        </Card>
-      </div>
-      
-      {/* Bottom Row: Admin Actions & System Health */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Recent Admin Actions */}
-        <Card>
-          <CardHeader className="pb-2">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-base flex items-center gap-2">
-                <ScrollText className="w-4 h-4 text-primary" />
-                Recent Admin Actions
-              </CardTitle>
-              <Link to="/superadmin/audit-logs">
-                <Button variant="ghost" size="sm">
-                  View All <ChevronRight className="w-4 h-4 ml-1" />
-                </Button>
-              </Link>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {(dashboard?.recent_admin_actions || []).length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-4">No recent actions</p>
-              ) : (
-                (dashboard?.recent_admin_actions || []).slice(0, 5).map((action) => (
-                  <div key={action.id} className="flex items-center justify-between p-2 rounded-lg bg-muted/30">
-                    <div>
-                      <p className="text-sm font-medium">
-                        {action.action_type?.replace(/_/g, ' ')}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        by {action.actor_role}
-                      </p>
-                    </div>
-                    <span className="text-xs text-muted-foreground">
-                      {formatTime(action.created_at)}
-                    </span>
-                  </div>
-                ))
-              )}
-            </div>
-          </CardContent>
-        </Card>
-        
-        {/* System Health */}
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base flex items-center gap-2">
-              <Activity className="w-4 h-4 text-green-500" />
-              System Health
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {/* Database Status */}
-              <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
-                <div className="flex items-center gap-3">
-                  <Database className="w-5 h-5 text-muted-foreground" />
-                  <span>Database Connection</span>
+          </div>
+        </div>
+      </section>
+
+      {/* Quick Actions Grid */}
+      <section className="px-4 mt-8">
+        <h2 className="text-xl font-bold tracking-tight mb-4">Quick Actions</h2>
+        <div className="grid grid-cols-4 gap-3">
+          <button 
+            onClick={() => navigate('/superadmin/users')}
+            className="flex flex-col items-center gap-2 p-4 rounded-xl bg-[#1e2736] border border-white/5 hover:border-blue-500/50 transition-all hover:bg-[#1e2736]/80"
+          >
+            <Users className="w-6 h-6 text-blue-500" />
+            <span className="text-xs font-medium text-slate-300">Users</span>
+          </button>
+          <button 
+            onClick={() => navigate('/superadmin/giftcards')}
+            className="flex flex-col items-center gap-2 p-4 rounded-xl bg-[#1e2736] border border-white/5 hover:border-emerald-500/50 transition-all hover:bg-[#1e2736]/80"
+          >
+            <CreditCard className="w-6 h-6 text-emerald-500" />
+            <span className="text-xs font-medium text-slate-300">Gift Cards</span>
+          </button>
+          <button 
+            onClick={() => navigate('/superadmin/games-fees')}
+            className="flex flex-col items-center gap-2 p-4 rounded-xl bg-[#1e2736] border border-white/5 hover:border-purple-500/50 transition-all hover:bg-[#1e2736]/80"
+          >
+            <Layers className="w-6 h-6 text-purple-500" />
+            <span className="text-xs font-medium text-slate-300">Games</span>
+          </button>
+          <button 
+            onClick={() => navigate('/superadmin/admin-scopes')}
+            className="flex flex-col items-center gap-2 p-4 rounded-xl bg-[#1e2736] border border-white/5 hover:border-orange-500/50 transition-all hover:bg-[#1e2736]/80"
+          >
+            <Lock className="w-6 h-6 text-orange-500" />
+            <span className="text-xs font-medium text-slate-300">Scopes</span>
+          </button>
+        </div>
+      </section>
+
+      {/* Recent Activity Feed */}
+      <section className="px-4 mt-8 mb-4">
+        <h2 className="text-xl font-bold tracking-tight mb-4">Recent Activity</h2>
+        <div className="flex flex-col gap-4">
+          {dashboard?.recent_actions?.slice(0, 5).map((action, index) => (
+            <div key={action.id || index} className="flex gap-4 items-start">
+              <div className="relative shrink-0">
+                <div className="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center text-slate-300 font-bold text-xs border border-white/10">
+                  {action.actor_username?.slice(0, 2).toUpperCase() || 'SYS'}
                 </div>
-                {dashboard?.system_health?.db_connected ? (
-                  <Badge className="bg-green-500/10 text-green-500 border-green-500/20">
-                    <CheckCircle className="w-3 h-3 mr-1" /> Connected
-                  </Badge>
-                ) : (
-                  <Badge className="bg-red-500/10 text-red-500 border-red-500/20">
-                    <XCircle className="w-3 h-3 mr-1" /> Disconnected
-                  </Badge>
-                )}
-              </div>
-              
-              {/* Scheduler Status */}
-              <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
-                <div className="flex items-center gap-3">
-                  <Clock className="w-5 h-5 text-muted-foreground" />
-                  <span>Job Scheduler</span>
+                <div className="absolute -bottom-1 -right-1 bg-[#101722] rounded-full p-0.5">
+                  {action.action_type?.includes('approve') || action.action_type?.includes('complete') ? (
+                    <CheckCircle className="w-3.5 h-3.5 text-emerald-500 bg-emerald-500/10 rounded-full p-0.5" />
+                  ) : action.action_type?.includes('dispute') || action.action_type?.includes('reject') ? (
+                    <AlertTriangle className="w-3.5 h-3.5 text-orange-500 bg-orange-500/10 rounded-full p-0.5" />
+                  ) : (
+                    <Activity className="w-3.5 h-3.5 text-blue-500 bg-blue-500/10 rounded-full p-0.5" />
+                  )}
                 </div>
-                {dashboard?.system_health?.scheduler_running ? (
-                  <Badge className="bg-green-500/10 text-green-500 border-green-500/20">
-                    <CheckCircle className="w-3 h-3 mr-1" /> Running
-                  </Badge>
-                ) : (
-                  <Badge className="bg-red-500/10 text-red-500 border-red-500/20">
-                    <XCircle className="w-3 h-3 mr-1" /> Stopped
-                  </Badge>
-                )}
               </div>
-              
-              {/* Scheduled Jobs */}
-              {(dashboard?.system_health?.jobs || []).length > 0 && (
-                <div className="mt-3">
-                  <p className="text-xs text-muted-foreground mb-2">Scheduled Jobs:</p>
-                  <div className="space-y-2">
-                    {(dashboard?.system_health?.jobs || []).map((job) => (
-                      <div key={job.id} className="flex items-center justify-between text-xs p-2 rounded bg-muted/20">
-                        <span>{job.name || job.id}</span>
-                        <span className="text-muted-foreground">
-                          Next: {job.next_run_time ? new Date(job.next_run_time).toLocaleString() : 'N/A'}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
+              <div className={`flex-1 ${index < (dashboard?.recent_actions?.length || 0) - 1 ? 'border-b border-white/5 pb-4' : ''}`}>
+                <p className="text-sm font-medium text-white">{action.action_type?.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</p>
+                <p className="text-xs text-slate-400 mt-0.5">{action.reason || 'No details'}</p>
+              </div>
+              <p className="text-xs font-bold text-slate-500 shrink-0">{formatTime(action.created_at)}</p>
             </div>
-          </CardContent>
-        </Card>
-      </div>
+          )) || (
+            <div className="flex gap-4 items-start">
+              <div className="relative shrink-0">
+                <div className="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center text-slate-300 font-bold text-xs border border-white/10">
+                  SYS
+                </div>
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-medium text-white">System Online</p>
+                <p className="text-xs text-slate-400 mt-0.5">All systems operational</p>
+              </div>
+              <p className="text-xs font-bold text-slate-500 shrink-0">Now</p>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* Bottom Navigation */}
+      <nav className="fixed bottom-0 left-0 w-full z-40 bg-[#101722]/80 backdrop-blur-xl border-t border-white/10 pt-2 pb-4">
+        <div className="flex justify-around items-center px-2">
+          <button 
+            onClick={() => navigate('/superadmin')}
+            className="flex flex-col items-center gap-1 p-2 text-blue-500"
+          >
+            <Home className="w-6 h-6" style={{ fill: 'currentColor', fillOpacity: 0.2 }} />
+            <span className="text-[10px] font-bold">Home</span>
+          </button>
+          <button 
+            onClick={() => navigate('/superadmin/users')}
+            className="flex flex-col items-center gap-1 p-2 text-slate-500 hover:text-slate-300 transition-colors"
+          >
+            <Users className="w-6 h-6" />
+            <span className="text-[10px] font-medium">Users</span>
+          </button>
+          <button 
+            onClick={() => navigate('/superadmin/orders')}
+            className="flex flex-col items-center gap-1 p-2 text-slate-500 hover:text-slate-300 transition-colors"
+          >
+            <div className="bg-blue-500 w-12 h-12 rounded-full -mt-8 border-4 border-[#101722] flex items-center justify-center shadow-lg shadow-blue-500/30 text-white">
+              <Plus className="w-6 h-6" />
+            </div>
+          </button>
+          <button 
+            onClick={() => navigate('/superadmin/finance')}
+            className="flex flex-col items-center gap-1 p-2 text-slate-500 hover:text-slate-300 transition-colors"
+          >
+            <Wallet className="w-6 h-6" />
+            <span className="text-[10px] font-medium">Finance</span>
+          </button>
+          <button 
+            onClick={() => navigate('/superadmin/config')}
+            className="flex flex-col items-center gap-1 p-2 text-slate-500 hover:text-slate-300 transition-colors"
+          >
+            <Settings className="w-6 h-6" />
+            <span className="text-[10px] font-medium">Settings</span>
+          </button>
+        </div>
+      </nav>
+
+      {/* Hide scrollbar style */}
+      <style>{`
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+        }
+        .scrollbar-hide {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+      `}</style>
     </div>
   );
 }
