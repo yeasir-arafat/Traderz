@@ -109,9 +109,18 @@ async def create_order(db: AsyncSession, buyer: User, data: OrderCreate) -> Orde
     db.add(conversation)
     
     await db.commit()
-    await db.refresh(order)
     
-    return order
+    # Re-fetch with relationships loaded
+    result = await db.execute(
+        select(Order)
+        .options(
+            selectinload(Order.buyer),
+            selectinload(Order.seller),
+            selectinload(Order.listing)
+        )
+        .where(Order.id == order.id)
+    )
+    return result.scalar_one()
 
 
 async def get_order(db: AsyncSession, order_id: UUID, user_id: UUID) -> Order:
