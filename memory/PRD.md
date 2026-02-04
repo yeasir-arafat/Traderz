@@ -186,25 +186,27 @@ CREATE TABLE withdrawal_requests (
 
 ## Changelog
 
-### February 4, 2026
+### February 4, 2026 (Latest)
+- **Built Notifications Page/UI**
+  - Full notifications list with mark-read functionality
+  - Individual and mark-all-read buttons
+  - Filter by unread
+- **Built Seller Public Profile Page** (`/seller/{username}`)
+  - Seller stats: level, rating, reviews, sales, member since
+  - KYC verification badge
+  - Active listings grid
+  - Recent reviews section
+  - Contact seller button
+- **Implemented Password Recovery Flow**
+  - Forgot password page (`/forgot-password`)
+  - Reset password page (`/reset-password?token=xxx`)
+  - Real email delivery via **Brevo/Sendinblue** (not mocked!)
+  - HTML email templates with PlayTraderz branding
+  - Password validation and secure token handling
 - **Fixed Core Marketplace Functionality**
-  - Fixed SQLAlchemy async relationship loading in `order_service.py` and `listing_service.py`
-  - All service functions now re-fetch models with `selectinload()` to eagerly load relationships
-  - Resolved `MissingGreenlet` errors when serializing responses
-- **Enhanced ChatPage.jsx with WebSocket Support**
-  - Added real-time WebSocket connection for instant messaging
-  - Live/Offline connection status indicator
-  - Typing indicator support
-  - Auto-reconnect on disconnect
-  - HTTP fallback when WebSocket unavailable
-- **Verified Working Flows**
-  - Listing creation, approval, and updates
-  - Full order lifecycle: create → deliver → complete/dispute
-  - Escrow system: buyer funds held, released to seller's pending balance after completion
-  - 10-day security hold on seller earnings
-  - Review submission on completed orders
-  - 24-hour dispute window after delivery
-  - Chat messaging with real-time updates
+  - Fixed SQLAlchemy async relationship loading in services
+  - Escrow system working: buyer funds held, released to seller pending
+  - Chat WebSocket support with live/offline indicator
 
 ### January 28, 2026
 - Super Admin System V2 modules completed
