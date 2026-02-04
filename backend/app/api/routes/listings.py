@@ -98,10 +98,10 @@ async def delete_listing(
 async def get_pending_listings(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
-    user: User = Depends(require_admin),
+    user: User = Depends(require_admin_scope("LISTINGS_REVIEW")),
     db: AsyncSession = Depends(get_db)
 ):
-    """Get pending listings for approval (admin)"""
+    """Get pending listings for approval (admin). Requires LISTINGS_REVIEW scope."""
     result = await listing_service.get_pending_listings(db, page, page_size)
     return success_response(result.model_dump())
 
@@ -110,10 +110,10 @@ async def get_pending_listings(
 async def review_listing(
     listing_id: UUID,
     data: ListingApproval,
-    user: User = Depends(require_admin),
+    user: User = Depends(require_admin_scope("LISTINGS_REVIEW")),
     db: AsyncSession = Depends(get_db)
 ):
-    """Approve or reject listing (admin)"""
+    """Approve or reject listing (admin). Requires LISTINGS_REVIEW scope."""
     listing = await listing_service.approve_listing(
         db, listing_id, user.id, data.approved, data.rejection_reason
     )
