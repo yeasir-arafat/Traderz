@@ -136,7 +136,23 @@ async def create_order(db: AsyncSession, buyer: User, data: OrderCreate) -> Orde
         )
         .where(Order.id == order.id)
     )
-    return result.scalar_one()
+    order = result.scalar_one()
+    
+    # Send email notifications
+    send_order_email_async(
+        buyer.email, order_number, "order_created",
+        {"amount": listing.price_usd, "order_id": str(order.id), "frontend_url": FRONTEND_URL}
+    )
+    # Also notify seller
+    seller_result = await db.execute(select(User).where(User.id == listing.seller_id))
+    seller = seller_result.scalar_one_or_none()
+    if seller:
+        send_order_email_async(
+            seller.email, order_number, "order_created",
+            {"amount": listing.price_usd, "order_id": str(order.id), "frontend_url": FRONTEND_URL}
+        )
+    
+    return order
 
 
 async def get_order(db: AsyncSession, order_id: UUID, user_id: UUID) -> Order:
