@@ -109,8 +109,14 @@ async def update_listing(db: AsyncSession, listing_id: UUID, seller_id: UUID, da
         listing.rejection_reason = None
     
     await db.commit()
-    await db.refresh(listing)
-    return listing
+    
+    # Re-fetch with relationships loaded
+    result = await db.execute(
+        select(Listing)
+        .options(selectinload(Listing.seller), selectinload(Listing.game))
+        .where(Listing.id == listing_id)
+    )
+    return result.scalar_one()
 
 
 async def get_listing(db: AsyncSession, listing_id: UUID, increment_views: bool = False) -> Listing:
