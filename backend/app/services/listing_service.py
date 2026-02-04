@@ -205,7 +205,7 @@ async def get_listings(
     total_pages = (total + page_size - 1) // page_size
     
     return ListingListResponse(
-        listings=[ListingResponse.model_validate(l) for l in listings],
+        listings=[ListingResponse.model_validate(listing) for listing in listings],
         total=total,
         page=page,
         page_size=page_size,
