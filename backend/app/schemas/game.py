@@ -11,6 +11,7 @@ class GameCreate(BaseModel):
     image_url: Optional[str] = None
     icon_url: Optional[str] = None
     buyer_note_html: Optional[str] = None  # Important note for buyers
+    regions: List[str] = []  # Game-specific regions
     is_active: bool = True
     display_order: int = 0
 
@@ -21,6 +22,7 @@ class GameUpdate(BaseModel):
     image_url: Optional[str] = None
     icon_url: Optional[str] = None
     buyer_note_html: Optional[str] = None  # Important note for buyers
+    regions: Optional[List[str]] = None
     is_active: Optional[bool] = None
     display_order: Optional[int] = None
 
