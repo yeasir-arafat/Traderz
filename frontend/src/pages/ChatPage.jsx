@@ -248,8 +248,21 @@ export default function ChatPage() {
       <div className="flex h-full border border-border rounded-lg overflow-hidden">
         {/* Conversation List */}
         <div className={`w-full md:w-80 border-r border-border flex-shrink-0 ${conversationId ? 'hidden md:block' : ''}`}>
-          <div className="p-4 border-b border-border">
+          <div className="p-4 border-b border-border flex items-center justify-between">
             <h2 className="font-heading font-bold text-lg">Messages</h2>
+            <div className="flex items-center gap-1 text-xs">
+              {isConnected ? (
+                <>
+                  <Wifi className="w-3 h-3 text-green-500" />
+                  <span className="text-green-500">Live</span>
+                </>
+              ) : (
+                <>
+                  <WifiOff className="w-3 h-3 text-muted-foreground" />
+                  <span className="text-muted-foreground">Offline</span>
+                </>
+              )}
+            </div>
           </div>
           <ScrollArea className="h-[calc(100%-4rem)]">
             {conversations.length > 0 ? (
