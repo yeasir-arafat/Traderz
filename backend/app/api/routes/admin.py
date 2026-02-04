@@ -5,7 +5,7 @@ from sqlalchemy.orm import selectinload
 
 from app.core.database import get_db
 from app.core.responses import success_response
-from app.api.deps import require_admin
+from app.api.deps import require_admin, require_admin_scope
 from app.models.user import User
 from app.models.listing import Listing, ListingStatus
 from app.models.order import Order, OrderStatus
