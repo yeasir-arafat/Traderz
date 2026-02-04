@@ -60,9 +60,14 @@ async def create_listing(db: AsyncSession, seller: User, data: ListingCreate) ->
     
     db.add(listing)
     await db.commit()
-    await db.refresh(listing)
     
-    return listing
+    # Re-fetch with relationships loaded to avoid async loading issues
+    result = await db.execute(
+        select(Listing)
+        .options(selectinload(Listing.seller), selectinload(Listing.game))
+        .where(Listing.id == listing.id)
+    )
+    return result.scalar_one()
 
 
 async def update_listing(db: AsyncSession, listing_id: UUID, seller_id: UUID, data: ListingUpdate) -> Listing:
