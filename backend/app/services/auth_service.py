@@ -350,8 +350,10 @@ async def change_password(db: AsyncSession, user: User, current_password: str, n
     return True
 
 
-async def request_password_reset(db: AsyncSession, email: str) -> bool:
+async def request_password_reset(db: AsyncSession, email: str, frontend_url: str = "https://account-exchange-3.preview.emergentagent.com") -> bool:
     """Request password reset (always returns success to prevent enumeration)"""
+    from app.services.email_service import send_password_reset_email
+    
     result = await db.execute(
         select(User).where(User.email == email.lower())
     )
@@ -362,12 +364,16 @@ async def request_password_reset(db: AsyncSession, email: str) -> bool:
         reset = PasswordReset(
             user_id=user.id,
             token_hash=hash_token(token),
-            expires_at=datetime.now(timezone.utc) + timedelta(minutes=30)
+            expires_at=datetime.now(timezone.utc) + timedelta(hours=1)
         )
         db.add(reset)
         await db.commit()
-        # TODO: Send email with token
-        print(f"Password reset token for {email}: {token}")
+        
+        # Send password reset email
+        try:
+            send_password_reset_email(user.email, token, frontend_url)
+        except Exception as e:
+            print(f"Failed to send password reset email: {e}")
     
     return True
 
