@@ -1,8 +1,8 @@
 import sib_api_v3_sdk
 from sib_api_v3_sdk.rest import ApiException
-import os
 import logging
 from typing import Optional
+from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -13,7 +13,7 @@ class EmailDeliveryError(Exception):
 
 def get_brevo_api():
     """Get Brevo/Sendinblue API instance"""
-    api_key = os.getenv('SENDGRID_API_KEY')  # Using same env var for compatibility
+    api_key = settings.SENDGRID_API_KEY
     if not api_key:
         logger.warning("Email API key not configured")
         return None
