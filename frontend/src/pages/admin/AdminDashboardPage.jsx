@@ -2,12 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
   Shield, Package, FileCheck, AlertTriangle, ShoppingCart,
-  Loader2, ChevronRight, Users, DollarSign
+  Loader2, ChevronRight, Users, DollarSign, Lock
 } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
+import { Badge } from '../../components/ui/badge';
 import { adminAPI, superAdminAPI } from '../../lib/api';
-import { useAuthStore, useCurrencyStore } from '../../store';
+import { useAuthStore, useCurrencyStore, hasAdminScope } from '../../store';
 import { formatCurrency } from '../../lib/utils';
 import { toast } from 'sonner';
 
@@ -22,6 +23,11 @@ export default function AdminDashboardPage() {
   
   const isAdmin = user?.roles?.includes('admin') || user?.roles?.includes('super_admin');
   const isSuperAdmin = user?.roles?.includes('super_admin');
+  
+  // Scope checks
+  const canReviewListings = hasAdminScope(user, 'LISTINGS_REVIEW');
+  const canReviewKYC = hasAdminScope(user, 'KYC_REVIEW');
+  const canResolveDisputes = hasAdminScope(user, 'DISPUTE_RESOLVE');
   
   useEffect(() => {
     if (!isAuthenticated) {
@@ -69,14 +75,27 @@ export default function AdminDashboardPage() {
   
   return (
     <div className="container mx-auto px-4 py-8 max-w-6xl">
-      <div className="flex items-center gap-3 mb-8">
-        <Shield className="w-8 h-8 text-primary" />
-        <div>
-          <h1 className="text-3xl font-heading font-bold">Admin Dashboard</h1>
-          <p className="text-muted-foreground">
-            {isSuperAdmin ? 'Super Admin Panel' : 'Admin Panel'}
-          </p>
+      <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center gap-3">
+          <Shield className="w-8 h-8 text-primary" />
+          <div>
+            <h1 className="text-3xl font-heading font-bold">Admin Dashboard</h1>
+            <p className="text-muted-foreground">
+              {isSuperAdmin ? 'Super Admin Panel' : 'Admin Panel'}
+            </p>
+          </div>
         </div>
+        {!isSuperAdmin && (
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-muted-foreground">Your Scopes:</span>
+            {(user?.admin_permissions || []).map(scope => (
+              <Badge key={scope} variant="outline" className="text-xs">{scope.split('_')[0]}</Badge>
+            ))}
+            {(user?.admin_permissions || []).length === 0 && (
+              <Badge variant="outline" className="text-xs text-yellow-500">No Scopes</Badge>
+            )}
+          </div>
+        )}
       </div>
       
       {/* Quick Stats */}
