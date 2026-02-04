@@ -13,13 +13,15 @@ A full-stack game account marketplace with wallet/escrow system, real-time chat,
 
 ## Implemented Features
 
-### Core Marketplace (Complete)
+### Core Marketplace (Complete - Feb 4, 2026)
 - User registration/login with email and social auth
 - Browse listings with filters (game, platform, price)
 - Listing detail pages with account info
-- Wallet system with escrow
+- Wallet system with escrow (10-day security hold for seller earnings)
 - Order flow: Create → Pay → Deliver → Complete/Dispute
-- Real-time chat via WebSocket
+- Real-time chat via WebSocket with live connection indicator
+- Review submission after order completion
+- Dispute functionality with 24-hour window after delivery
 
 ### Seller Features (Complete)
 - Create/edit listings with images
