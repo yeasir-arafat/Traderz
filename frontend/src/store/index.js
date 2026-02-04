@@ -1,6 +1,17 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
+// Helper to check if user has required admin scope
+export const hasAdminScope = (user, ...scopes) => {
+  if (!user) return false;
+  // Super admin bypasses all scopes
+  if (user.roles?.includes('super_admin')) return true;
+  // Regular admin needs explicit scope
+  if (!user.roles?.includes('admin')) return false;
+  const userScopes = user.admin_permissions || [];
+  return scopes.some(scope => userScopes.includes(scope));
+};
+
 // Auth Store
 export const useAuthStore = create(
   persist(
@@ -29,6 +40,12 @@ export const useAuthStore = create(
       updateUser: (updates) => set((state) => ({
         user: state.user ? { ...state.user, ...updates } : null,
       })),
+      
+      // Check if current user has a specific admin scope
+      hasScope: (...scopes) => {
+        const user = get().user;
+        return hasAdminScope(user, ...scopes);
+      },
       
       logout: () => set({
         user: null,
