@@ -368,7 +368,16 @@ async def dispute_order(db: AsyncSession, order_id: UUID, buyer_id: UUID, reason
         )
         .where(Order.id == order_id)
     )
-    return result.scalar_one()
+    order = result.scalar_one()
+    
+    # Send email notification to seller about dispute
+    if order.seller:
+        send_order_email_async(
+            order.seller.email, order.order_number, "order_disputed",
+            {"amount": order.amount_usd, "order_id": str(order.id), "frontend_url": FRONTEND_URL}
+        )
+    
+    return order
 
 
 async def resolve_dispute(db: AsyncSession, order_id: UUID, admin_id: UUID, resolution: str, note: str) -> Order:
