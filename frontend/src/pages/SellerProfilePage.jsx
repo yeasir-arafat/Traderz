@@ -47,8 +47,8 @@ export default function SellerProfilePage() {
     setLoading(true);
     setError(null);
     try {
-      const response = await api.get(`/users/seller/${username}`);
-      setSeller(response.data.data);
+      const data = await api.get(`/users/seller/${username}`);
+      setSeller(data);
     } catch (err) {
       setError(err.message || 'Seller not found');
     } finally {
