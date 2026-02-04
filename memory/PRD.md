@@ -177,7 +177,7 @@ CREATE TABLE withdrawal_requests (
 
 ### P2 (Medium Priority)
 - [ ] Multi-language support
-- [ ] Email notifications for order status changes
+- [x] ~~Email notifications for order status changes~~ (Completed Feb 4, 2026)
 - [ ] Implement content reporting/flagging system
 - [x] ~~Admin scope enforcement on frontend (hide buttons when scope missing)~~ (Completed)
 - [x] ~~Admin scope enforcement on backend (403 INSUFFICIENT_SCOPE)~~ (Completed)
