@@ -165,12 +165,13 @@ CREATE TABLE withdrawal_requests (
 ### P1 (High Priority)
 - [x] ~~Connect ChatPage.jsx to WebSocket backend~~ (Completed Feb 4, 2026)
 - [x] ~~Fix listing creation, order flow, escrow, reviews, disputes~~ (Completed Feb 4, 2026)
-- [ ] Build notifications page/UI
-- [ ] Build seller public profile page
+- [x] ~~Build notifications page/UI~~ (Completed Feb 4, 2026)
+- [x] ~~Build seller public profile page~~ (Completed Feb 4, 2026)
+- [x] ~~Password recovery flow with email~~ (Completed Feb 4, 2026 - using Brevo)
 
 ### P2 (Medium Priority)
-- [ ] Password recovery flow (reset pages, email sending)
-- [ ] Integrate real email service (SendGrid)
+- [ ] Multi-language support
+- [ ] Email notifications for order status changes
 - [ ] Implement content reporting/flagging system
 - [x] ~~Admin scope enforcement on frontend (hide buttons when scope missing)~~ (Completed)
 - [x] ~~Admin scope enforcement on backend (403 INSUFFICIENT_SCOPE)~~ (Completed)
