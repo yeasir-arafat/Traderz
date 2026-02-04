@@ -40,6 +40,71 @@ async def get_games(
         "games": [GameResponse.model_validate(g).model_dump() for g in games]
     })
 
+# Fee-rules routes MUST be defined before /{game_id} so "/fee-rules" is not matched as game_id
+@router.get("/fee-rules")
+async def get_fee_rules(
+    user: User = Depends(require_super_admin),
+    db: AsyncSession = Depends(get_db)
+):
+    """Get all fee rules (super admin)"""
+    result = await db.execute(select(PlatformFeeRule))
+    rules = result.scalars().all()
+    return success_response({
+        "rules": [PlatformFeeRuleResponse.model_validate(r).model_dump() for r in rules]
+    })
+
+
+@router.post("/fee-rules")
+async def create_fee_rule(
+    data: PlatformFeeRuleCreate,
+    user: User = Depends(require_super_admin),
+    db: AsyncSession = Depends(get_db)
+):
+    """Create fee rule (super admin)"""
+    rule = PlatformFeeRule(**data.model_dump())
+    db.add(rule)
+    await db.commit()
+    await db.refresh(rule)
+    return success_response(PlatformFeeRuleResponse.model_validate(rule).model_dump())
+
+
+@router.put("/fee-rules/{rule_id}")
+async def update_fee_rule(
+    rule_id: UUID,
+    data: PlatformFeeRuleUpdate,
+    user: User = Depends(require_super_admin),
+    db: AsyncSession = Depends(get_db)
+):
+    """Update fee rule (super admin)"""
+    result = await db.execute(select(PlatformFeeRule).where(PlatformFeeRule.id == rule_id))
+    rule = result.scalar_one_or_none()
+    if not rule:
+        raise AppException(ErrorCodes.NOT_FOUND, "Fee rule not found", 404)
+    
+    for key, value in data.model_dump(exclude_unset=True).items():
+        setattr(rule, key, value)
+    
+    await db.commit()
+    await db.refresh(rule)
+    return success_response(PlatformFeeRuleResponse.model_validate(rule).model_dump())
+
+
+@router.delete("/fee-rules/{rule_id}")
+async def delete_fee_rule(
+    rule_id: UUID,
+    user: User = Depends(require_super_admin),
+    db: AsyncSession = Depends(get_db)
+):
+    """Delete fee rule (super admin)"""
+    result = await db.execute(select(PlatformFeeRule).where(PlatformFeeRule.id == rule_id))
+    rule = result.scalar_one_or_none()
+    if not rule:
+        raise AppException(ErrorCodes.NOT_FOUND, "Fee rule not found", 404)
+    
+    await db.delete(rule)
+    await db.commit()
+    return success_response({"message": "Fee rule deleted"})
+
 
 @router.get("/{game_id}")
 async def get_game(game_id: UUID, db: AsyncSession = Depends(get_db)):
@@ -123,68 +188,4 @@ async def update_platform(
     await db.commit()
     await db.refresh(platform)
     return success_response(GamePlatformResponse.model_validate(platform).model_dump())
-
-
-@router.get("/fee-rules")
-async def get_fee_rules(
-    user: User = Depends(require_super_admin),
-    db: AsyncSession = Depends(get_db)
-):
-    """Get all fee rules (super admin)"""
-    result = await db.execute(select(PlatformFeeRule))
-    rules = result.scalars().all()
-    return success_response({
-        "rules": [PlatformFeeRuleResponse.model_validate(r).model_dump() for r in rules]
-    })
-
-
-@router.post("/fee-rules")
-async def create_fee_rule(
-    data: PlatformFeeRuleCreate,
-    user: User = Depends(require_super_admin),
-    db: AsyncSession = Depends(get_db)
-):
-    """Create fee rule (super admin)"""
-    rule = PlatformFeeRule(**data.model_dump())
-    db.add(rule)
-    await db.commit()
-    await db.refresh(rule)
-    return success_response(PlatformFeeRuleResponse.model_validate(rule).model_dump())
-
-
-@router.put("/fee-rules/{rule_id}")
-async def update_fee_rule(
-    rule_id: UUID,
-    data: PlatformFeeRuleUpdate,
-    user: User = Depends(require_super_admin),
-    db: AsyncSession = Depends(get_db)
-):
-    """Update fee rule (super admin)"""
-    result = await db.execute(select(PlatformFeeRule).where(PlatformFeeRule.id == rule_id))
-    rule = result.scalar_one_or_none()
-    if not rule:
-        raise AppException(ErrorCodes.NOT_FOUND, "Fee rule not found", 404)
     
-    for key, value in data.model_dump(exclude_unset=True).items():
-        setattr(rule, key, value)
-    
-    await db.commit()
-    await db.refresh(rule)
-    return success_response(PlatformFeeRuleResponse.model_validate(rule).model_dump())
-
-
-@router.delete("/fee-rules/{rule_id}")
-async def delete_fee_rule(
-    rule_id: UUID,
-    user: User = Depends(require_super_admin),
-    db: AsyncSession = Depends(get_db)
-):
-    """Delete fee rule (super admin)"""
-    result = await db.execute(select(PlatformFeeRule).where(PlatformFeeRule.id == rule_id))
-    rule = result.scalar_one_or_none()
-    if not rule:
-        raise AppException(ErrorCodes.NOT_FOUND, "Fee rule not found", 404)
-    
-    await db.delete(rule)
-    await db.commit()
-    return success_response({"message": "Fee rule deleted"})
