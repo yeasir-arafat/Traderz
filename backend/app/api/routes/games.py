@@ -127,8 +127,6 @@ async def create_game(
     db: AsyncSession = Depends(get_db)
 ):
     """Create game (super admin)"""
-    from sqlalchemy.orm import selectinload
-    
     # Extract platforms before creating game
     platforms_data = data.platforms if hasattr(data, 'platforms') and data.platforms else []
     game_data = data.model_dump(exclude={'platforms'} if hasattr(data, 'platforms') else set())
