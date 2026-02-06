@@ -159,9 +159,6 @@ async def update_game(
     db: AsyncSession = Depends(get_db)
 ):
     """Update game (super admin)"""
-    from sqlalchemy.orm import selectinload
-    from sqlalchemy import delete
-    
     result = await db.execute(
         select(Game).options(selectinload(Game.platforms)).where(Game.id == game_id)
     )
