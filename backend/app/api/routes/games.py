@@ -160,16 +160,45 @@ async def update_game(
     db: AsyncSession = Depends(get_db)
 ):
     """Update game (super admin)"""
-    result = await db.execute(select(Game).where(Game.id == game_id))
+    from sqlalchemy.orm import selectinload
+    
+    result = await db.execute(
+        select(Game).options(selectinload(Game.platforms)).where(Game.id == game_id)
+    )
     game = result.scalar_one_or_none()
     if not game:
         raise AppException(ErrorCodes.NOT_FOUND, "Game not found", 404)
     
-    for key, value in data.model_dump(exclude_unset=True).items():
+    update_data = data.model_dump(exclude_unset=True)
+    
+    # Handle platforms separately
+    if 'platforms' in update_data:
+        platforms_data = update_data.pop('platforms')
+        
+        # Delete existing platforms
+        await db.execute(
+            select(GamePlatform).where(GamePlatform.game_id == game_id)
+        )
+        for existing_platform in game.platforms:
+            await db.delete(existing_platform)
+        
+        # Create new platforms
+        for platform_name in platforms_data:
+            platform = GamePlatform(game_id=game_id, platform_name=platform_name)
+            db.add(platform)
+    
+    # Update other fields
+    for key, value in update_data.items():
         setattr(game, key, value)
     
     await db.commit()
-    await db.refresh(game)
+    
+    # Re-fetch with relationships
+    result = await db.execute(
+        select(Game).options(selectinload(Game.platforms)).where(Game.id == game_id)
+    )
+    game = result.scalar_one()
+    
     return success_response(GameResponse.model_validate(game).model_dump())
 
 
