@@ -30,7 +30,7 @@ async def get_games(
     from sqlalchemy.orm import selectinload
     query = select(Game).options(selectinload(Game.platforms))
     if not include_inactive:
-        query = query.where(Game.is_active == True)
+        query = query.where(Game.is_active.is_(True))
     query = query.order_by(Game.display_order, Game.name)
     
     result = await db.execute(query)
