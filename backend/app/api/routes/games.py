@@ -161,6 +161,7 @@ async def update_game(
 ):
     """Update game (super admin)"""
     from sqlalchemy.orm import selectinload
+    from sqlalchemy import delete
     
     result = await db.execute(
         select(Game).options(selectinload(Game.platforms)).where(Game.id == game_id)
@@ -175,12 +176,8 @@ async def update_game(
     if 'platforms' in update_data:
         platforms_data = update_data.pop('platforms')
         
-        # Delete existing platforms
-        await db.execute(
-            select(GamePlatform).where(GamePlatform.game_id == game_id)
-        )
-        for existing_platform in game.platforms:
-            await db.delete(existing_platform)
+        # Delete all existing platforms for this game
+        await db.execute(delete(GamePlatform).where(GamePlatform.game_id == game_id))
         
         # Create new platforms
         for platform_name in platforms_data:
