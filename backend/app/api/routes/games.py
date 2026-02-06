@@ -126,10 +126,29 @@ async def create_game(
     db: AsyncSession = Depends(get_db)
 ):
     """Create game (super admin)"""
-    game = Game(**data.model_dump())
+    from sqlalchemy.orm import selectinload
+    
+    # Extract platforms before creating game
+    platforms_data = data.platforms if hasattr(data, 'platforms') and data.platforms else []
+    game_data = data.model_dump(exclude={'platforms'} if hasattr(data, 'platforms') else set())
+    
+    game = Game(**game_data)
     db.add(game)
+    await db.flush()
+    
+    # Create platform entries
+    for platform_name in platforms_data:
+        platform = GamePlatform(game_id=game.id, platform_name=platform_name)
+        db.add(platform)
+    
     await db.commit()
-    await db.refresh(game)
+    
+    # Re-fetch with relationships
+    result = await db.execute(
+        select(Game).options(selectinload(Game.platforms)).where(Game.id == game.id)
+    )
+    game = result.scalar_one()
+    
     return success_response(GameResponse.model_validate(game).model_dump())
 
 
