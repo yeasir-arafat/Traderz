@@ -12,17 +12,20 @@ class GameCreate(BaseModel):
     icon_url: Optional[str] = None
     buyer_note_html: Optional[str] = None  # Important note for buyers
     regions: List[str] = []  # Game-specific regions
+    platforms: List[str] = []  # Platform names to create
     is_active: bool = True
     display_order: int = 0
 
 
 class GameUpdate(BaseModel):
     name: Optional[str] = Field(None, min_length=1, max_length=100)
+    slug: Optional[str] = Field(None, min_length=1, max_length=100)
     description: Optional[str] = None
     image_url: Optional[str] = None
     icon_url: Optional[str] = None
     buyer_note_html: Optional[str] = None  # Important note for buyers
     regions: Optional[List[str]] = None
+    platforms: Optional[List[str]] = None  # Platform names to replace
     is_active: Optional[bool] = None
     display_order: Optional[int] = None
 
