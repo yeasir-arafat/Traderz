@@ -97,3 +97,4 @@ class Message(Base):
     
     # Relationships
     conversation = relationship("Conversation", back_populates="messages")
+    sender = relationship("User", foreign_keys=[sender_id])
