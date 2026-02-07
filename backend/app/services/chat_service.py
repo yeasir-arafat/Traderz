@@ -306,7 +306,10 @@ async def get_messages(
     if user_id not in conversation.participant_ids:
         raise AppException(ErrorCodes.AUTHORIZATION_ERROR, "Not a participant", 403)
     
-    query = select(Message).where(Message.conversation_id == conversation_id)
+    # Load messages with sender info using selectinload
+    query = select(Message).options(
+        selectinload(Message.sender)
+    ).where(Message.conversation_id == conversation_id)
     
     if before:
         query = query.where(Message.created_at < before)
