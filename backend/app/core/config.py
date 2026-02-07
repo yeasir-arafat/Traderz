@@ -23,6 +23,9 @@ class Settings(BaseSettings):
     SENDGRID_API_KEY: Optional[str] = None
     SENDER_EMAIL: str = "noreply@playtraderz.com"
     
+    # Telegram
+    TELEGRAM_BOT_TOKEN: Optional[str] = None
+    
     # App
     APP_NAME: str = "PlayTraderz"
     DEBUG: bool = False
