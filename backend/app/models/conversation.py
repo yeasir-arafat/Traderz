@@ -41,6 +41,15 @@ class Conversation(Base):
     admin_joined = Column(Boolean, default=False, nullable=False)
     admin_joined_at = Column(DateTime(timezone=True), nullable=True)
     
+    # Support chat specific fields
+    support_status = Column(Enum(SupportRequestStatus), nullable=True)  # Only for support chats
+    support_subject = Column(String(255), nullable=True)  # Subject of support request
+    requester_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)  # User who initiated support
+    accepted_by_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)  # First admin who accepted
+    accepted_at = Column(DateTime(timezone=True), nullable=True)
+    closed_at = Column(DateTime(timezone=True), nullable=True)
+    closed_by_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    
     # Timestamps
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
     updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)
@@ -49,6 +58,9 @@ class Conversation(Base):
     # Relationships
     messages = relationship("Message", back_populates="conversation", order_by="Message.created_at")
     order = relationship("Order", back_populates="conversation")
+    requester = relationship("User", foreign_keys=[requester_id])
+    accepted_by = relationship("User", foreign_keys=[accepted_by_id])
+    closed_by = relationship("User", foreign_keys=[closed_by_id])
 
 
 class Message(Base):
