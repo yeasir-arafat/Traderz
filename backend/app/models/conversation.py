@@ -10,6 +10,13 @@ import enum
 class ConversationType(str, enum.Enum):
     CASUAL = "casual"  # Buyer-seller DM
     ORDER = "order"    # Order-specific group chat
+    SUPPORT = "support"  # User to admin support chat
+
+
+class SupportRequestStatus(str, enum.Enum):
+    PENDING = "pending"  # Waiting for admin to accept
+    ACTIVE = "active"    # Admin has accepted, chat is active
+    CLOSED = "closed"    # Support request closed
 
 
 class Conversation(Base):
