@@ -64,6 +64,15 @@ async def upload_kyc_document(
     return await _upload_file(file, "kyc", str(user.id))
 
 
+@router.post("/chat")
+async def upload_chat_attachment(
+    file: UploadFile = File(...),
+    user: User = Depends(get_current_user)
+):
+    """Upload chat attachment (any file type allowed for support chats)"""
+    return await _upload_any_file(file, "chat", str(user.id))
+
+
 async def _upload_file(file: UploadFile, folder: str, user_id: str):
     """Generic file upload handler with security validations"""
     
