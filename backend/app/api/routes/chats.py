@@ -133,6 +133,29 @@ async def get_order_conversation(
     return success_response(ConversationResponse.model_validate(conversation).model_dump())
 
 
+def serialize_message(msg: Message) -> dict:
+    """Safely serialize a Message to dict, handling lazy-loaded relationships"""
+    sender_data = None
+    if msg.sender:
+        sender_data = {
+            "id": str(msg.sender.id),
+            "username": msg.sender.username,
+            "full_name": msg.sender.full_name
+        }
+    
+    return {
+        "id": str(msg.id),
+        "conversation_id": str(msg.conversation_id),
+        "sender_id": str(msg.sender_id) if msg.sender_id else None,
+        "content": msg.content,
+        "is_system_message": msg.is_system_message,
+        "attachments": msg.attachments or [],
+        "read_by": [str(uid) for uid in (msg.read_by or [])],
+        "created_at": msg.created_at.isoformat(),
+        "sender": sender_data
+    }
+
+
 @router.get("/{conversation_id}/messages")
 async def get_messages(
     conversation_id: UUID,
@@ -144,7 +167,7 @@ async def get_messages(
     """Get messages in conversation"""
     messages = await chat_service.get_messages(db, conversation_id, user.id, before, limit)
     return success_response({
-        "messages": [MessageResponse.model_validate(m).model_dump() for m in messages]
+        "messages": [serialize_message(m) for m in messages]
     })
 
 
@@ -159,7 +182,7 @@ async def send_message(
     message = await chat_service.send_message(
         db, conversation_id, user.id, data.content, data.attachments
     )
-    return success_response(MessageResponse.model_validate(message).model_dump())
+    return success_response(serialize_message(message))
 
 
 @router.post("/{conversation_id}/read")
