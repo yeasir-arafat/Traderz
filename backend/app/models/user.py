@@ -83,6 +83,11 @@ class User(Base):
     admin_notes = Column(Text, nullable=True)
     admin_permissions = Column(ARRAY(String), default=[], nullable=False)  # LISTINGS_REVIEW, KYC_REVIEW, DISPUTE_RESOLVE, FAQ_EDIT
     
+    # Telegram integration
+    telegram_username = Column(String(100), nullable=True)
+    telegram_chat_id = Column(String(50), nullable=True)  # Chat ID for sending notifications
+    telegram_notifications_enabled = Column(Boolean, default=True, nullable=False)
+    
     # Timestamps
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
     updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)
