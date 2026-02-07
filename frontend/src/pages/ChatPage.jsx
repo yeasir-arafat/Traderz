@@ -215,17 +215,24 @@ export default function ChatPage() {
   const fetchMessages = async (convId) => {
     try {
       // Find conversation from all sources
-      const allConversations = [
+      let allConversations = [
         ...conversations.casual,
         ...conversations.order,
         ...conversations.support,
         ...supportRequests.pending,
         ...supportRequests.active,
       ];
-      const conv = allConversations.find(c => c.id === convId);
+      let conv = allConversations.find(c => c.id === convId);
+      
+      // If not found in state, fetch fresh data
+      if (!conv) {
+        const freshData = await chatsAPI.getAll();
+        allConversations = freshData?.conversations || [];
+        conv = allConversations.find(c => c.id === convId);
+      }
       
       const msgData = await chatsAPI.getMessages(convId, { limit: 100 });
-      setSelectedConversation(conv);
+      setSelectedConversation(conv || { id: convId, conversation_type: 'unknown' });
       setMessages(msgData?.messages || []);
     } catch (error) {
       toast.error('Failed to load messages');
