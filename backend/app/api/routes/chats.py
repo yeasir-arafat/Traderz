@@ -10,6 +10,7 @@ from app.core.errors import AppException
 from app.core.responses import ErrorCodes
 from app.api.deps import get_current_user
 from app.models.user import User
+from app.models.conversation import Message
 from app.services import chat_service
 from app.schemas.chat import (
     StartConversationRequest, StartSupportRequest, AcceptSupportRequest,
