@@ -411,9 +411,16 @@ export default function ChatPage() {
   const getConversationDisplayName = (conv) => {
     if (!conv) return 'Chat';
     if (conv.conversation_type === 'support') {
-      if (isAdmin && conv.requester_info) {
-        return `${conv.requester_info.full_name} (@${conv.requester_info.username})`;
+      // Admin should see user's name
+      if (isAdmin) {
+        if (conv.requester_info) {
+          return `${conv.requester_info.full_name} (@${conv.requester_info.username})`;
+        }
+        if (conv.display_name) {
+          return conv.display_name;
+        }
       }
+      // User sees "Admin Support"
       return 'Admin Support';
     }
     return conv.name || (conv.conversation_type === 'order' ? 'Order Chat' : 'Direct Message');
