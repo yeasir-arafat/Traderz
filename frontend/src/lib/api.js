@@ -113,7 +113,8 @@ export const walletAPI = {
 
 // Chats API
 export const chatsAPI = {
-  getAll: () => api.get('/chats'),
+  getAll: (conversationType = null) => api.get('/chats', { params: conversationType ? { conversation_type: conversationType } : {} }),
+  getUnreadCount: () => api.get('/chats/unread-count'),
   start: (data) => api.post('/chats/start', data),
   getOrderChat: (orderId) => api.get(`/chats/order/${orderId}`),
   getMessages: (conversationId, params) => api.get(`/chats/${conversationId}/messages`, { params }),
@@ -122,6 +123,13 @@ export const chatsAPI = {
   markRead: (conversationId, messageIds) => 
     api.post(`/chats/${conversationId}/read`, { message_ids: messageIds }),
   inviteAdmin: (conversationId) => api.post(`/chats/${conversationId}/invite-admin`),
+  // Support chat endpoints
+  createSupportRequest: (subject, initialMessage, attachments = []) => 
+    api.post('/chats/support', { subject, initial_message: initialMessage, attachments }),
+  getSupportRequests: () => api.get('/chats/support/requests'),
+  acceptSupportRequest: (conversationId) => api.post(`/chats/support/${conversationId}/accept`),
+  closeSupportRequest: (conversationId, reason = null) => 
+    api.post(`/chats/support/${conversationId}/close`, { reason }),
 };
 
 // Notifications API
