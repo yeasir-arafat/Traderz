@@ -247,33 +247,26 @@ export default function ChatPage() {
     const attachments = [...messageAttachments];
     setNewMessage('');
     setMessageAttachments([]);
+    setSending(true);
     
-    // Send via WebSocket if connected
-    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-      wsRef.current.send(JSON.stringify({
-        type: 'message',
-        conversation_id: conversationId,
-        content: messageContent,
-        attachments: attachments
-      }));
-      wsRef.current.send(JSON.stringify({
-        type: 'typing',
-        conversation_id: conversationId,
-        is_typing: false
-      }));
-    } else {
-      // Fallback to HTTP API
-      setSending(true);
-      try {
-        const message = await chatsAPI.sendMessage(conversationId, messageContent, attachments);
-        setMessages([...messages, message]);
-      } catch (error) {
-        toast.error('Failed to send message');
-        setNewMessage(messageContent);
-        setMessageAttachments(attachments);
-      } finally {
-        setSending(false);
+    try {
+      const message = await chatsAPI.sendMessage(conversationId, messageContent, attachments);
+      setMessages(prev => [...prev, message]);
+      
+      // Also notify via WebSocket if connected (for typing indicator stop)
+      if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+        wsRef.current.send(JSON.stringify({
+          type: 'typing',
+          conversation_id: conversationId,
+          is_typing: false
+        }));
       }
+    } catch (error) {
+      toast.error('Failed to send message');
+      setNewMessage(messageContent);
+      setMessageAttachments(attachments);
+    } finally {
+      setSending(false);
     }
   };
   
