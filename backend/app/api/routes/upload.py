@@ -129,3 +129,47 @@ async def _upload_file(file: UploadFile, folder: str, user_id: str):
     
     logger.info(f"File uploaded: {url} by user {user_id}")
     return success_response({"url": url, "filename": filename})
+
+
+async def _upload_any_file(file: UploadFile, folder: str, user_id: str):
+    """Upload any file type (for support chat attachments)"""
+    
+    # 1. Get file extension
+    ext = os.path.splitext(file.filename or "")[1].lower()
+    if not ext:
+        ext = ".bin"  # Default extension for unknown types
+    
+    # 2. Read content (no size limit as per user request)
+    content = await file.read()
+    
+    if len(content) == 0:
+        raise AppException(
+            "INVALID_FILE",
+            "Empty file not allowed."
+        )
+    
+    # 3. Generate unique filename and save
+    original_name = os.path.splitext(file.filename or "file")[0]
+    # Sanitize original name
+    safe_original = "".join(c for c in original_name if c.isalnum() or c in "-_")[:50]
+    filename = f"{user_id}_{uuid4().hex[:8]}_{safe_original}{ext}"
+    filepath = os.path.join(settings.UPLOAD_DIR, folder, filename)
+    
+    # Ensure directory exists
+    os.makedirs(os.path.dirname(filepath), exist_ok=True)
+    
+    # Save file
+    async with aiofiles.open(filepath, 'wb') as f:
+        await f.write(content)
+    
+    # Return URL
+    url = f"/uploads/{folder}/{filename}"
+    
+    logger.info(f"Chat file uploaded: {url} by user {user_id}, size: {len(content)} bytes")
+    return success_response({
+        "url": url, 
+        "filename": filename,
+        "original_name": file.filename,
+        "size": len(content),
+        "content_type": file.content_type
+    })
