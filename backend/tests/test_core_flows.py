@@ -8,7 +8,7 @@ import os
 import uuid
 from datetime import datetime
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://account-exchange-3.preview.emergentagent.com').rstrip('/')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://seller-listings.preview.emergentagent.com').rstrip('/')
 
 # Test credentials from requirements
 SUPER_ADMIN_EMAIL = "super@admin.com"

@@ -23,7 +23,7 @@ from app.schemas.order import OrderCreate, OrderResponse, OrderListResponse
 logger = logging.getLogger(__name__)
 
 # Frontend URL for email links
-FRONTEND_URL = "https://account-exchange-3.preview.emergentagent.com"
+FRONTEND_URL = "https://seller-listings.preview.emergentagent.com"
 
 
 def send_order_email_async(to_email: str, order_number: str, notification_type: str, details: dict):

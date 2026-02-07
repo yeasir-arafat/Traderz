@@ -350,7 +350,7 @@ async def change_password(db: AsyncSession, user: User, current_password: str, n
     return True
 
 
-async def request_password_reset(db: AsyncSession, email: str, frontend_url: str = "https://account-exchange-3.preview.emergentagent.com") -> bool:
+async def request_password_reset(db: AsyncSession, email: str, frontend_url: str = "https://seller-listings.preview.emergentagent.com") -> bool:
     """Request password reset (always returns success to prevent enumeration)"""
     from app.services.email_service import send_password_reset_email
     
