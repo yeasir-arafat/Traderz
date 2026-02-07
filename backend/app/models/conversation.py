@@ -23,7 +23,10 @@ class Conversation(Base):
     __tablename__ = "conversations"
     
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    conversation_type = Column(Enum(ConversationType), nullable=False)
+    conversation_type = Column(
+        Enum(ConversationType, values_callable=lambda x: [e.value for e in x]),
+        nullable=False
+    )
     
     # For order chats
     order_id = Column(UUID(as_uuid=True), ForeignKey("orders.id", ondelete="CASCADE"), nullable=True, unique=True, index=True)
@@ -42,7 +45,10 @@ class Conversation(Base):
     admin_joined_at = Column(DateTime(timezone=True), nullable=True)
     
     # Support chat specific fields
-    support_status = Column(Enum(SupportRequestStatus), nullable=True)  # Only for support chats
+    support_status = Column(
+        Enum(SupportRequestStatus, values_callable=lambda x: [e.value for e in x]),
+        nullable=True
+    )  # Only for support chats
     support_subject = Column(String(255), nullable=True)  # Subject of support request
     requester_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)  # User who initiated support
     accepted_by_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)  # First admin who accepted
