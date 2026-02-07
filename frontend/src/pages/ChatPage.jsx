@@ -402,6 +402,7 @@ export default function ChatPage() {
   
   // Get display name for conversation
   const getConversationDisplayName = (conv) => {
+    if (!conv) return 'Chat';
     if (conv.conversation_type === 'support') {
       if (isAdmin && conv.requester_info) {
         return `${conv.requester_info.full_name} (@${conv.requester_info.username})`;
