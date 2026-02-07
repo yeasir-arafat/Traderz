@@ -6,11 +6,14 @@ from datetime import datetime
 
 from app.core.database import get_db
 from app.core.responses import success_response
+from app.core.errors import AppException
+from app.core.responses import ErrorCodes
 from app.api.deps import get_current_user
 from app.models.user import User
 from app.services import chat_service
 from app.schemas.chat import (
-    StartConversationRequest, SendMessageRequest, MarkReadRequest,
+    StartConversationRequest, StartSupportRequest, AcceptSupportRequest,
+    CloseSupportRequest, SendMessageRequest, MarkReadRequest,
     ConversationResponse, MessageResponse
 )
 
@@ -18,14 +21,32 @@ from app.schemas.chat import (
 router = APIRouter(prefix="/chats", tags=["Chats"])
 
 
+def require_admin(user: User):
+    """Check if user is admin"""
+    if "admin" not in user.roles and "super_admin" not in user.roles:
+        raise AppException(ErrorCodes.AUTHORIZATION_ERROR, "Admin access required", 403)
+    return user
+
+
 @router.get("")
 async def get_conversations(
+    conversation_type: Optional[str] = Query(None, description="Filter by type: casual, order, support"),
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
-    """Get user's conversations"""
-    result = await chat_service.get_conversations(db, user.id)
+    """Get user's conversations, optionally filtered by type"""
+    result = await chat_service.get_conversations(db, user.id, conversation_type)
     return success_response(result.model_dump())
+
+
+@router.get("/unread-count")
+async def get_unread_count(
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Get total unread message count for user"""
+    count = await chat_service.get_unread_count_for_user(db, user.id)
+    return success_response({"unread_count": count})
 
 
 @router.post("/start")
@@ -36,8 +57,6 @@ async def start_conversation(
 ):
     """Start casual conversation with user"""
     if not data.recipient_id:
-        from app.core.errors import AppException
-        from app.core.responses import ErrorCodes
         raise AppException(ErrorCodes.VALIDATION_ERROR, "recipient_id required")
     
     conversation = await chat_service.get_or_create_casual_conversation(
@@ -50,6 +69,56 @@ async def start_conversation(
     return success_response(ConversationResponse.model_validate(conversation).model_dump())
 
 
+@router.post("/support")
+async def create_support_request(
+    data: StartSupportRequest,
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Create a new support request (user to admin)"""
+    conversation = await chat_service.create_support_conversation(
+        db, user.id, data.subject, data.initial_message, data.attachments
+    )
+    return success_response(ConversationResponse.model_validate(conversation).model_dump())
+
+
+@router.get("/support/requests")
+async def get_support_requests(
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Get pending support requests (admin only)"""
+    require_admin(user)
+    result = await chat_service.get_support_requests_for_admin(db, user.id)
+    return success_response(result.model_dump())
+
+
+@router.post("/support/{conversation_id}/accept")
+async def accept_support_request(
+    conversation_id: UUID,
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Accept/join a support request (admin only)"""
+    require_admin(user)
+    conversation = await chat_service.accept_support_request(db, conversation_id, user.id)
+    return success_response(ConversationResponse.model_validate(conversation).model_dump())
+
+
+@router.post("/support/{conversation_id}/close")
+async def close_support_request(
+    conversation_id: UUID,
+    data: CloseSupportRequest,
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Close a support conversation"""
+    conversation = await chat_service.close_support_request(
+        db, conversation_id, user.id, data.reason
+    )
+    return success_response(ConversationResponse.model_validate(conversation).model_dump())
+
+
 @router.get("/order/{order_id}")
 async def get_order_conversation(
     order_id: UUID,
@@ -59,8 +128,6 @@ async def get_order_conversation(
     """Get conversation for order"""
     conversation = await chat_service.get_order_conversation(db, order_id)
     if not conversation:
-        from app.core.errors import AppException
-        from app.core.responses import ErrorCodes
         raise AppException(ErrorCodes.NOT_FOUND, "Conversation not found", 404)
     
     return success_response(ConversationResponse.model_validate(conversation).model_dump())
