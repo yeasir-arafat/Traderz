@@ -16,13 +16,91 @@ import { cn } from '../../lib/utils';
 export function Layout({ children }) {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, isAuthenticated, logout } = useAuthStore();
+  const { user, isAuthenticated, logout, token } = useAuthStore();
   const { currency, setCurrency } = useCurrencyStore();
   const { unreadCount } = useNotificationStore();
+  const { 
+    unreadChatCount, 
+    hasNewMessage, 
+    setUnreadCount: setChatUnreadCount, 
+    clearNewMessageFlag,
+    incrementUnread: incrementChatUnread,
+    playNotificationSound 
+  } = useChatNotificationStore();
+  
+  const wsRef = useRef(null);
+  const WS_URL = process.env.REACT_APP_BACKEND_URL?.replace('https://', 'wss://').replace('http://', 'ws://') + '/ws';
   
   const isAdmin = user?.roles?.includes('admin') || user?.roles?.includes('super_admin');
   const isSuperAdmin = user?.roles?.includes('super_admin');
   const isSeller = user?.roles?.includes('seller');
+  
+  // Fetch initial unread chat count
+  useEffect(() => {
+    const fetchUnreadCount = async () => {
+      if (isAuthenticated && token) {
+        try {
+          const data = await chatsAPI.getUnreadCount();
+          setChatUnreadCount(data?.unread_count || 0);
+        } catch (error) {
+          console.error('Failed to fetch unread count:', error);
+        }
+      }
+    };
+    fetchUnreadCount();
+  }, [isAuthenticated, token, setChatUnreadCount]);
+  
+  // WebSocket connection for real-time chat notifications
+  useEffect(() => {
+    if (!token || !isAuthenticated) return;
+    
+    const connectWebSocket = () => {
+      const ws = new WebSocket(`${WS_URL}?token=${token}`);
+      
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          if (data.type === 'new_message') {
+            // Only notify if not on chat page or not in that conversation
+            const onChatPage = location.pathname.startsWith('/chat');
+            const inConversation = location.pathname.includes(data.conversation_id);
+            
+            if (!onChatPage || !inConversation) {
+              incrementChatUnread();
+              playNotificationSound();
+            }
+          }
+        } catch (e) {
+          // Ignore parsing errors
+        }
+      };
+      
+      ws.onclose = () => {
+        // Reconnect after 5 seconds
+        setTimeout(connectWebSocket, 5000);
+      };
+      
+      wsRef.current = ws;
+    };
+    
+    connectWebSocket();
+    
+    return () => {
+      if (wsRef.current) {
+        wsRef.current.close();
+      }
+    };
+  }, [token, isAuthenticated, location.pathname, incrementChatUnread, playNotificationSound]);
+  
+  // Clear new message flag after animation
+  useEffect(() => {
+    if (hasNewMessage) {
+      const timer = setTimeout(() => {
+        clearNewMessageFlag();
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [hasNewMessage, clearNewMessageFlag]);
   
   const handleLogout = () => {
     logout();
