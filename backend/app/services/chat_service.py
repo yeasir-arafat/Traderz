@@ -392,6 +392,28 @@ async def get_conversations(
         )
         unread_count = unread_result.scalar() or 0
         
+        # Build last message response manually to avoid lazy loading issues
+        last_message_resp = None
+        if last_msg:
+            sender_resp = None
+            if last_msg.sender:
+                sender_resp = {
+                    "id": last_msg.sender.id,
+                    "username": last_msg.sender.username,
+                    "full_name": last_msg.sender.full_name
+                }
+            last_message_resp = MessageResponse(
+                id=last_msg.id,
+                conversation_id=last_msg.conversation_id,
+                sender_id=last_msg.sender_id,
+                content=last_msg.content,
+                is_system_message=last_msg.is_system_message,
+                attachments=last_msg.attachments or [],
+                read_by=last_msg.read_by or [],
+                created_at=last_msg.created_at,
+                sender=sender_resp
+            )
+        
         conv_response = ConversationResponse(
             id=conv.id,
             conversation_type=conv.conversation_type.value,
@@ -402,7 +424,7 @@ async def get_conversations(
             admin_joined=conv.admin_joined,
             last_message_at=conv.last_message_at,
             created_at=conv.created_at,
-            last_message=MessageResponse.model_validate(last_msg) if last_msg else None,
+            last_message=last_message_resp,
             unread_count=unread_count,
             support_status=conv.support_status.value if conv.support_status else None,
             support_subject=conv.support_subject,
