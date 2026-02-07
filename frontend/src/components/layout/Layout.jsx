@@ -275,18 +275,35 @@ export function Layout({ children }) {
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = location.pathname === item.path;
+          const isChatItem = item.path === '/chat';
+          
           return (
             <Link
               key={item.path}
               to={isAuthenticated || item.path === '/' || item.path === '/browse' ? item.path : '/login'}
               className={cn(
-                "flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-colors",
-                isActive ? "text-primary" : "text-muted-foreground"
+                "flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-colors relative",
+                isActive ? "text-primary" : "text-muted-foreground",
+                isChatItem && hasNewMessage && "animate-bounce"
               )}
               data-testid={`mobile-nav-${item.label.toLowerCase()}`}
             >
-              <Icon className="w-5 h-5" />
+              <Icon className={cn(
+                "w-5 h-5",
+                isChatItem && hasNewMessage && "text-primary animate-pulse"
+              )} />
               <span className="text-xs">{item.label}</span>
+              {/* Chat badge */}
+              {isChatItem && unreadChatCount > 0 && (
+                <span className={cn(
+                  "absolute top-0 right-1 w-4 h-4 text-[10px] rounded-full flex items-center justify-center",
+                  hasNewMessage 
+                    ? "bg-primary text-primary-foreground animate-ping-slow" 
+                    : "bg-destructive text-destructive-foreground"
+                )}>
+                  {unreadChatCount > 9 ? '9+' : unreadChatCount}
+                </span>
+              )}
             </Link>
           );
         })}
