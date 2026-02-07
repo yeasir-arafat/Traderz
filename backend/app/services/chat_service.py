@@ -282,7 +282,12 @@ async def send_message(
     conversation.last_message_at = datetime.now(timezone.utc)
     
     await db.commit()
-    await db.refresh(message)
+    
+    # Reload message with sender relationship
+    result = await db.execute(
+        select(Message).options(selectinload(Message.sender)).where(Message.id == message.id)
+    )
+    message = result.scalar_one()
     return message
 
 
