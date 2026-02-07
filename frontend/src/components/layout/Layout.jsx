@@ -155,6 +155,35 @@ export function Layout({ children }) {
             
             {isAuthenticated ? (
               <>
+                {/* Chat Messages */}
+                <Link 
+                  to="/chat" 
+                  className={cn(
+                    "relative",
+                    hasNewMessage && "animate-bounce"
+                  )} 
+                  data-testid="chat-link"
+                >
+                  <MessageCircle 
+                    className={cn(
+                      "w-5 h-5 transition-colors",
+                      hasNewMessage 
+                        ? "text-primary animate-pulse" 
+                        : "text-muted-foreground hover:text-primary"
+                    )} 
+                  />
+                  {unreadChatCount > 0 && (
+                    <span className={cn(
+                      "absolute -top-1 -right-1 w-4 h-4 text-xs rounded-full flex items-center justify-center",
+                      hasNewMessage 
+                        ? "bg-primary text-primary-foreground animate-ping-slow" 
+                        : "bg-destructive text-destructive-foreground"
+                    )}>
+                      {unreadChatCount > 9 ? '9+' : unreadChatCount}
+                    </span>
+                  )}
+                </Link>
+                
                 {/* Notifications */}
                 <Link to="/notifications" className="relative" data-testid="notifications-link">
                   <Bell className="w-5 h-5 text-muted-foreground hover:text-primary transition-colors" />
