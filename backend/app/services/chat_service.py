@@ -368,10 +368,11 @@ async def get_conversations(
     # Get last message and unread count for each
     response_list = []
     for conv in conversations:
-        # Get last message
+        # Get last message with sender info
         msg_result = await db.execute(
-            select(Message)
-            .where(Message.conversation_id == conv.id)
+            select(Message).options(
+                selectinload(Message.sender)
+            ).where(Message.conversation_id == conv.id)
             .order_by(Message.created_at.desc())
             .limit(1)
         )
