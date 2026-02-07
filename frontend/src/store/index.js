@@ -111,3 +111,26 @@ export const useNotificationStore = create((set) => ({
   decrementUnread: () => set((state) => ({ unreadCount: Math.max(0, state.unreadCount - 1) })),
   clearUnread: () => set({ unreadCount: 0 }),
 }));
+
+// Chat Notification Store
+export const useChatNotificationStore = create((set, get) => ({
+  unreadChatCount: 0,
+  hasNewMessage: false,
+  lastMessageTime: null,
+  
+  setUnreadCount: (count) => set({ unreadChatCount: count }),
+  incrementUnread: () => set((state) => ({ 
+    unreadChatCount: state.unreadChatCount + 1,
+    hasNewMessage: true,
+    lastMessageTime: Date.now()
+  })),
+  clearNewMessageFlag: () => set({ hasNewMessage: false }),
+  resetUnread: () => set({ unreadChatCount: 0, hasNewMessage: false }),
+  
+  // Play notification sound
+  playNotificationSound: () => {
+    const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2teleQ0RUJThnnRYTGexrXeScVRcqsSWeE5CvNuZfGdASdWudXQJCJOXZH9/e28tCFWp3LtQESppyrZmR0JsvZ1wgR0DfLyIXWhNQ5/FtYRvMExZtcGUgGhES46agHp9djUCJXq0vYxQHhGBwqhtWGZ2pZN5dWdWVI6edHRyABZ0xsKVUCEBiMOrdmVZjaGNcXaGABF7uJtybmVpd5qReX1xaDJKk6WLb2lhVoKZgoR+cT8/bZqYgXRsZ2yLjoWDbUxFcJqVgXVwbHeLjod3Yk9KdZqTgXVvbnKNjIt8ZFdQe5eUgXRubnOPjI1+aFpUf5WTgnJtbXSOjI2AaldPfJSTgXNubXSPjI2CZlpQfZWTgnNtbXSPjI2AalVMepKQfnBtbnSPjI2CaFdPfZWTgnNtbXSOi4qAaFhQfZaUg3FsbHONi4uBZ1dPfZaSgnJubXOOi4t/Z1hPfJWRgnJsbHGMiomAaFpSfpaTgnJsbXKMioqAaVpRfZSSgnJtbXKMioqAaFhPfZSSg3JubXOMiomAaFlQfZSSgnJtbXONioqAZ1hQfpSTgnJubXONiouAZlhQfpSTgnJubXONiouAZ1hQfpSTgnJubXONiouAZ1hQfpSTgnJubXONiouAZ1hQfpSTgnJubXONiouAZ1hQfpSTgnJubXONiouAZ1hQfpSTgnJubXONiouA');
+    audio.volume = 0.5;
+    audio.play().catch(() => {}); // Ignore errors if user hasn't interacted
+  }
+}));
