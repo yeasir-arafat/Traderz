@@ -53,7 +53,7 @@ export default function CreateListingPage() {
 
   const fetchGames = async () => {
     try {
-      const data = await gamesAPI.list();
+      const data = await gamesAPI.getAll();
       setGames(data.games || []);
     } catch (error) {
       toast.error('Failed to load games');
