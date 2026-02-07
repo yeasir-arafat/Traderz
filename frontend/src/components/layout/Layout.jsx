@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Home, Search, PlusCircle, MessageCircle, User, Bell, Wallet, LogOut, Settings, Shield } from 'lucide-react';
-import { useAuthStore, useCurrencyStore, useNotificationStore } from '../../store';
+import { useAuthStore, useCurrencyStore, useNotificationStore, useChatNotificationStore } from '../../store';
+import { chatsAPI } from '../../lib/api';
 import { Button } from '../ui/button';
 import {
   DropdownMenu,
