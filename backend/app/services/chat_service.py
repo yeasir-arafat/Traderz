@@ -10,6 +10,7 @@ from app.models.listing import Listing
 from app.models.user import User
 from app.core.errors import AppException
 from app.core.responses import ErrorCodes
+from app.services import telegram_service
 from app.schemas.chat import (
     ConversationResponse, ConversationListResponse,
     MessageResponse, SendMessageRequest, RequesterInfoResponse,
@@ -281,7 +282,49 @@ async def send_message(
     # Update conversation last message time
     conversation.last_message_at = datetime.now(timezone.utc)
     
+    # Collect recipient and admin users for Telegram before commit
+    recipient_ids = [p for p in conversation.participant_ids if p != sender_id]
+    recipient_users = []
+    admin_users = []
+    if recipient_ids:
+        rec_result = await db.execute(
+            select(User).where(
+                User.id.in_(recipient_ids),
+                User.telegram_chat_id.isnot(None),
+                User.telegram_notifications_enabled == True
+            )
+        )
+        recipient_users = list(rec_result.scalars().all())
+    if conversation.conversation_type == ConversationType.SUPPORT:
+        adm_result = await db.execute(
+            select(User).where(
+                or_(
+                    User.roles.contains(["admin"]),
+                    User.roles.contains(["super_admin"])
+                ),
+                User.telegram_chat_id.isnot(None),
+                User.telegram_notifications_enabled == True
+            )
+        )
+        admin_users = list(adm_result.scalars().all())
+    
     await db.commit()
+    
+    # Telegram: notify recipients and admins (after commit so we don't hold the session)
+    if conversation.conversation_type == ConversationType.CASUAL:
+        msg_text = "You received a Casual chat."
+        for u in recipient_users:
+            await telegram_service.send_telegram_message(u.telegram_chat_id, msg_text)
+    elif conversation.conversation_type == ConversationType.ORDER:
+        msg_text = "You received an order chat."
+        for u in recipient_users:
+            await telegram_service.send_telegram_message(u.telegram_chat_id, msg_text)
+    elif conversation.conversation_type == ConversationType.SUPPORT:
+        support_text = "You received a support message."
+        for u in admin_users:
+            await telegram_service.send_telegram_message(u.telegram_chat_id, support_text)
+        for u in recipient_users:
+            await telegram_service.send_telegram_message(u.telegram_chat_id, support_text)
     
     # Reload message with sender relationship
     result = await db.execute(
@@ -309,7 +352,13 @@ async def get_messages(
         raise AppException(ErrorCodes.NOT_FOUND, "Conversation not found", 404)
     
     if user_id not in conversation.participant_ids:
-        raise AppException(ErrorCodes.AUTHORIZATION_ERROR, "Not a participant", 403)
+        # Check if user is super admin
+        user_result = await db.execute(select(User).where(User.id == user_id))
+        user = user_result.scalar_one_or_none()
+        is_super_admin = user and "super_admin" in user.roles
+        
+        if not is_super_admin:
+            raise AppException(ErrorCodes.AUTHORIZATION_ERROR, "Not a participant", 403)
     
     # Load messages with sender info using selectinload
     query = select(Message).options(
@@ -358,9 +407,19 @@ async def get_conversations(
     conversation_type: Optional[str] = None
 ) -> ConversationListResponse:
     """Get user's conversations, optionally filtered by type"""
-    query = select(Conversation).where(
-        Conversation.participant_ids.contains([user_id])
-    )
+    # Check if super admin
+    user_result = await db.execute(select(User).where(User.id == user_id))
+    user = user_result.scalar_one_or_none()
+    is_super_admin = user and "super_admin" in user.roles
+
+    if is_super_admin:
+        # Super admin sees all conversations
+        query = select(Conversation)
+    else:
+        # Regular users only see their own
+        query = select(Conversation).where(
+            Conversation.participant_ids.contains([user_id])
+        )
     
     if conversation_type:
         query = query.where(Conversation.conversation_type == ConversationType(conversation_type))
@@ -414,6 +473,31 @@ async def get_conversations(
                 sender=sender_resp
             )
         
+        # For casual/order chats, resolve other participant's name for display
+        display_name = conv.name
+        if conv.conversation_type in (ConversationType.CASUAL, ConversationType.ORDER) and conv.participant_ids:
+            other_ids = [p for p in conv.participant_ids if p != user_id]
+            if other_ids:
+                other_result = await db.execute(select(User).where(User.id == other_ids[0]))
+                other_user = other_result.scalar_one_or_none()
+                if other_user:
+                    if other_user.full_name and other_user.full_name.strip():
+                        display_name = f"{other_user.full_name} (@{other_user.username})"
+                    else:
+                        display_name = other_user.username
+        
+        # Determine last_active_at (of the other participant)
+        last_active_at = None
+        if conv.conversation_type in (ConversationType.CASUAL, ConversationType.ORDER) and conv.participant_ids:
+            other_ids = [p for p in conv.participant_ids if p != user_id]
+            if other_ids:
+                # We might have already fetched other_user above, but let's be safe or optimize later
+                # For now, reuse the fetch concept or fetch if needed
+                other_result = await db.execute(select(User).where(User.id == other_ids[0]))
+                other_u = other_result.scalar_one_or_none()
+                if other_u:
+                    last_active_at = other_u.last_login_at
+        
         conv_response = ConversationResponse(
             id=conv.id,
             conversation_type=conv.conversation_type.value,
@@ -430,7 +514,9 @@ async def get_conversations(
             support_subject=conv.support_subject,
             requester_id=conv.requester_id,
             accepted_at=conv.accepted_at,
-            closed_at=conv.closed_at
+            closed_at=conv.closed_at,
+            display_name=display_name,
+            last_active_at=last_active_at
         )
         response_list.append(conv_response)
     
@@ -585,6 +671,13 @@ async def invite_admin_to_conversation(
         read_by=[]
     )
     db.add(system_msg)
+    
+    # Notify the invited admin via Telegram (join request from order chat)
+    if admin and admin.telegram_chat_id and admin.telegram_notifications_enabled:
+        await telegram_service.send_telegram_message(
+            admin.telegram_chat_id,
+            "You received a join request from an order chat."
+        )
     
     await db.commit()
     await db.refresh(conversation)

@@ -6,6 +6,7 @@ from uuid import UUID
 
 from app.models.user import User
 from app.models.listing import Listing, ListingStatus
+from app.models.order import Order, OrderStatus
 from app.models.review import Review
 from app.core.errors import AppException
 from app.core.responses import ErrorCodes
@@ -54,6 +55,10 @@ async def update_profile(db: AsyncSession, user: User, data: ProfileUpdateReques
         user.country = data.country
     if data.postal_code is not None:
         user.postal_code = data.postal_code
+    if data.telegram_username is not None:
+        user.telegram_username = data.telegram_username.strip() or None
+        # Require re-verification when username changes (message bot again, then verify on site)
+        user.telegram_chat_id = None
     
     await db.commit()
     await db.refresh(user)
@@ -170,6 +175,15 @@ async def get_seller_public_profile(db: AsyncSession, username: str) -> dict:
     )
     total_listings = count_result.scalar() or 0
     
+    # Get completed sales count
+    sales_count_result = await db.execute(
+        select(func.count(Order.id)).where(
+            Order.seller_id == seller.id,
+            Order.status == OrderStatus.COMPLETED
+        )
+    )
+    total_sales = sales_count_result.scalar() or 0
+    
     # Get recent reviews with reviewer info
     reviews_result = await db.execute(
         select(Review)
@@ -187,7 +201,7 @@ async def get_seller_public_profile(db: AsyncSession, username: str) -> dict:
         "seller_level": seller.seller_level,
         "seller_rating": seller.seller_rating,
         "total_reviews": seller.total_reviews,
-        "total_sales": int(seller.total_sales_volume_usd / 50) if seller.total_sales_volume_usd else 0,  # Approximate
+        "total_sales": total_sales,
         "kyc_verified": seller.kyc_status == "approved",
         "member_since": seller.created_at.isoformat(),
         "total_listings": total_listings,

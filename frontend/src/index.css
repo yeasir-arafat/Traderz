@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Outfit:wght@300;400;500;700&family=Rajdhani:wght@500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,31 +6,53 @@
 
 @layer base {
   :root {
-    --background: 0 0% 2%;
-    --foreground: 0 0% 93%;
-    --card: 0 0% 4%;
+    /* Design system: primary #2b8cee, background-light #f6f7f8, background-dark #101922, unread-badge #007AFF */
+    --color-primary: #2b8cee;
+    --color-primary-rgb: 43 140 238;
+    --color-background-light: #31659a;
+    --color-background-dark: #101922;
+    --color-unread-badge: #007AFF;
+    --glass-dark: rgba(23, 31, 41, 0.8);
+    --glass-light: rgba(255, 255, 255, 0.8);
+
+    --background: 214 36% 10%;
+    --foreground: 0 0% 100%;
+    --card: 214 28% 14%;
     --card-foreground: 0 0% 100%;
-    --popover: 0 0% 4%;
+    --popover: 214 28% 14%;
     --popover-foreground: 0 0% 100%;
-    --primary: 155 100% 50%;
-    --primary-foreground: 0 0% 0%;
-    --secondary: 187 100% 44%;
-    --secondary-foreground: 0 0% 0%;
-    --muted: 0 0% 10%;
-    --muted-foreground: 0 0% 53%;
-    --accent: 270 100% 50%;
+    --primary: 211 82% 55%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 211 82% 55%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 214 20% 18%;
+    --muted-foreground: 0 0% 70%;
+    --accent: 211 82% 55%;
     --accent-foreground: 0 0% 100%;
     --destructive: 0 100% 60%;
     --destructive-foreground: 0 0% 100%;
-    --border: 0 0% 12%;
-    --input: 0 0% 12%;
-    --ring: 155 100% 50%;
+    --border: 214 20% 20%;
+    --input: 214 20% 20%;
+    --ring: 211 82% 55%;
     --radius: 0.25rem;
-    --chart-1: 155 100% 50%;
-    --chart-2: 187 100% 44%;
-    --chart-3: 270 100% 50%;
+    --chart-1: 211 82% 55%;
+    --chart-2: 211 100% 50%;
+    --chart-3: 214 36% 10%;
     --chart-4: 0 100% 60%;
     --chart-5: 45 100% 50%;
+  }
+
+  .light {
+    --background: 220 7% 97%;
+    --foreground: 214 36% 10%;
+    --card: 0 0% 100%;
+    --card-foreground: 214 36% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 214 36% 10%;
+    --muted: 220 7% 92%;
+    --muted-foreground: 214 10% 40%;
+    --border: 220 7% 88%;
+    --input: 220 7% 88%;
   }
 }
 
@@ -40,10 +62,10 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: 'Outfit', sans-serif;
+    font-family: 'Inter', sans-serif;
   }
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Rajdhani', sans-serif;
+    font-family: 'Inter', sans-serif;
   }
 }
 
@@ -75,11 +97,24 @@
   text-shadow: 0 0 10px hsl(var(--primary) / 0.5);
 }
 
-/* Glass effect */
+/* Glass effect - design system */
 .glass {
-  background: hsl(var(--card) / 0.7);
+  background: var(--glass-dark);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.light .glass {
+  background: var(--glass-light);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+.glass-panel {
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.light .glass-panel {
+  border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 /* Loading animation */

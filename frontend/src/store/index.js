@@ -22,7 +22,7 @@ export const useAuthStore = create(
       needsProfileCompletion: false,
       needsTermsAcceptance: false,
       firebaseData: null,
-      
+
       setAuth: (user, token) => set({
         user,
         token,
@@ -30,23 +30,23 @@ export const useAuthStore = create(
         needsProfileCompletion: false,
         needsTermsAcceptance: false,
       }),
-      
+
       setNeedsCompletion: (needsProfile, needsTerms, firebaseData = null) => set({
         needsProfileCompletion: needsProfile,
         needsTermsAcceptance: needsTerms,
         firebaseData,
       }),
-      
+
       updateUser: (updates) => set((state) => ({
         user: state.user ? { ...state.user, ...updates } : null,
       })),
-      
+
       // Check if current user has a specific admin scope
       hasScope: (...scopes) => {
         const user = get().user;
         return hasAdminScope(user, ...scopes);
       },
-      
+
       logout: () => set({
         user: null,
         token: null,
@@ -73,10 +73,10 @@ export const useCurrencyStore = create(
     (set) => ({
       currency: 'USD',
       usdToBdtRate: 110,
-      
+
       setCurrency: (currency) => set({ currency }),
       setRate: (rate) => set({ usdToBdtRate: rate }),
-      
+
       formatAmount: (amountUsd) => {
         const state = useCurrencyStore.getState();
         if (state.currency === 'BDT') {
@@ -97,7 +97,7 @@ export const useCurrencyStore = create(
 export const useUIStore = create((set) => ({
   isMobileMenuOpen: false,
   isLoading: false,
-  
+
   setMobileMenuOpen: (open) => set({ isMobileMenuOpen: open }),
   setLoading: (loading) => set({ isLoading: loading }),
 }));
@@ -106,7 +106,7 @@ export const useUIStore = create((set) => ({
 export const useNotificationStore = create((set) => ({
   notifications: [],
   unreadCount: 0,
-  
+
   setNotifications: (notifications, unreadCount) => set({ notifications, unreadCount }),
   decrementUnread: () => set((state) => ({ unreadCount: Math.max(0, state.unreadCount - 1) })),
   clearUnread: () => set({ unreadCount: 0 }),
@@ -117,20 +117,23 @@ export const useChatNotificationStore = create((set, get) => ({
   unreadChatCount: 0,
   hasNewMessage: false,
   lastMessageTime: null,
-  
+
   setUnreadCount: (count) => set({ unreadChatCount: count }),
-  incrementUnread: () => set((state) => ({ 
+  incrementUnread: () => set((state) => ({
     unreadChatCount: state.unreadChatCount + 1,
     hasNewMessage: true,
     lastMessageTime: Date.now()
   })),
+  decrementUnread: (amount = 1) => set((state) => ({
+    unreadChatCount: Math.max(0, state.unreadChatCount - amount)
+  })),
   clearNewMessageFlag: () => set({ hasNewMessage: false }),
   resetUnread: () => set({ unreadChatCount: 0, hasNewMessage: false }),
-  
+
   // Play notification sound
   playNotificationSound: () => {
     const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2teleQ0RUJThnnRYTGexrXeScVRcqsSWeE5CvNuZfGdASdWudXQJCJOXZH9/e28tCFWp3LtQESppyrZmR0JsvZ1wgR0DfLyIXWhNQ5/FtYRvMExZtcGUgGhES46agHp9djUCJXq0vYxQHhGBwqhtWGZ2pZN5dWdWVI6edHRyABZ0xsKVUCEBiMOrdmVZjaGNcXaGABF7uJtybmVpd5qReX1xaDJKk6WLb2lhVoKZgoR+cT8/bZqYgXRsZ2yLjoWDbUxFcJqVgXVwbHeLjod3Yk9KdZqTgXVvbnKNjIt8ZFdQe5eUgXRubnOPjI1+aFpUf5WTgnJtbXSOjI2AaldPfJSTgXNubXSPjI2CZlpQfZWTgnNtbXSPjI2AalVMepKQfnBtbnSPjI2CaFdPfZWTgnNtbXSOi4qAaFhQfZaUg3FsbHONi4uBZ1dPfZaSgnJubXOOi4t/Z1hPfJWRgnJsbHGMiomAaFpSfpaTgnJsbXKMioqAaVpRfZSSgnJtbXKMioqAaFhPfZSSg3JubXOMiomAaFlQfZSSgnJtbXONioqAZ1hQfpSTgnJubXONiouAZlhQfpSTgnJubXONiouAZ1hQfpSTgnJubXONiouAZ1hQfpSTgnJubXONiouAZ1hQfpSTgnJubXONiouAZ1hQfpSTgnJubXONiouAZ1hQfpSTgnJubXONiouA');
     audio.volume = 0.5;
-    audio.play().catch(() => {}); // Ignore errors if user hasn't interacted
+    audio.play().catch(() => { }); // Ignore errors if user hasn't interacted
   }
 }));

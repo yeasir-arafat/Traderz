@@ -31,6 +31,37 @@ export function formatDateTime(date) {
   });
 }
 
+/** Short time for chat list: "10:42 AM", "Yesterday", "Tue", "Mon", or full date */
+export function formatTimeShort(date) {
+  const d = new Date(date);
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+  const dDate = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  if (dDate.getTime() === today.getTime()) {
+    return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+  }
+  if (dDate.getTime() === yesterday.getTime()) return 'Yesterday';
+  const diffDays = Math.floor((today - dDate) / (1000 * 60 * 60 * 24));
+  if (diffDays < 7) return d.toLocaleDateString('en-US', { weekday: 'short' });
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
+/** Date label for message grouping: "Yesterday, 10:23 AM" or "Today, 9:41 AM" */
+export function formatMessageDate(date) {
+  const d = new Date(date);
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+  const dDate = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const time = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+  if (dDate.getTime() === today.getTime()) return `Today, ${time}`;
+  if (dDate.getTime() === yesterday.getTime()) return `Yesterday, ${time}`;
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ', ' + time;
+}
+
 export function getSellerLevelColor(level) {
   const colors = {
     bronze: 'text-orange-400',
@@ -76,4 +107,27 @@ export function truncateText(text, maxLength = 100) {
   if (!text) return '';
   if (text.length <= maxLength) return text;
   return text.substring(0, maxLength) + '...';
+}
+
+export function formatTimeAgo(date) {
+  const d = new Date(date);
+  const now = new Date();
+  const diffInSeconds = Math.floor((now - d) / 1000);
+
+  if (diffInSeconds < 60) return 'just now';
+  const diffInMinutes = Math.floor(diffInSeconds / 60);
+  if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
+  const diffInHours = Math.floor(diffInMinutes / 60);
+  if (diffInHours < 24) return `${diffInHours}h ago`;
+  const diffInDays = Math.floor(diffInHours / 24);
+  if (diffInDays < 7) return `${diffInDays}d ago`;
+  return formatDate(date);
+}
+
+export function getUploadUrl(path) {
+  const API_URL = process.env.REACT_APP_BACKEND_URL;
+  if (!path) return path;
+  if (typeof path !== 'string' || path.startsWith('http')) return path;
+  const base = (API_URL || '').replace(/\/$/, '');
+  return base ? `${base}${path.startsWith('/') ? path : '/' + path}` : path;
 }

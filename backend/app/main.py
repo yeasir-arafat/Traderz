@@ -2,6 +2,7 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Query
 from fastapi.staticfiles import StaticFiles
 from fastapi.exceptions import RequestValidationError
 from starlette.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from contextlib import asynccontextmanager
 import os
 import logging
@@ -24,11 +25,20 @@ from app.jobs.scheduler import start_scheduler, shutdown_scheduler
 from app.api.routes import (
     auth, users, sellers, listings, orders, wallet,
     chats, notifications, kyc, games, giftcards, faq,
-    config_routes, admin, superadmin, health, reviews, upload, debug
+    config_routes, admin, superadmin, health, reviews, upload, debug, telegram, slides
 )
 
 setup_logging()
 logger = logging.getLogger(__name__)
+
+# ... (rest of file)
+
+app.include_router(upload.router, prefix=api_prefix)
+app.include_router(admin.router, prefix=api_prefix)
+app.include_router(superadmin.router, prefix=api_prefix)
+app.include_router(debug.router, prefix=api_prefix)
+app.include_router(telegram.router, prefix=api_prefix)
+app.include_router(slides.router, prefix=api_prefix)
 
 
 # WebSocket connection manager
@@ -132,6 +142,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.add_middleware(GZipMiddleware, minimum_size=1000)
+
 # Exception handlers
 app.add_exception_handler(AppException, app_exception_handler)
 app.add_exception_handler(RequestValidationError, validation_exception_handler)
@@ -163,6 +175,7 @@ app.include_router(upload.router, prefix=api_prefix)
 app.include_router(admin.router, prefix=api_prefix)
 app.include_router(superadmin.router, prefix=api_prefix)
 app.include_router(debug.router, prefix=api_prefix)
+app.include_router(telegram.router, prefix=api_prefix)
 
 
 @app.get("/api/")

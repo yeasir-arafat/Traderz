@@ -363,7 +363,7 @@ export default function ListingDetailsPage() {
             </CardHeader>
             <CardContent>
               <Link
-                to={`/seller/${listing.seller?.id}`}
+                to={listing.seller?.username ? `/seller/${listing.seller.username}` : '#'}
                 className="flex items-center gap-3 hover:text-primary transition-colors"
                 data-testid="seller-profile-link"
               >

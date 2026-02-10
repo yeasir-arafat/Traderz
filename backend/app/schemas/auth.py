@@ -111,6 +111,7 @@ class UserResponse(BaseModel):
     status: str = "active"
     status_reason: Optional[str] = None
     profile_unlocked: bool = False
+    telegram_username: Optional[str] = None
     created_at: datetime
     last_login_at: Optional[datetime] = None
 
@@ -140,3 +141,4 @@ class ProfileUpdateRequest(BaseModel):
     state: Optional[str] = None
     country: Optional[str] = None
     postal_code: Optional[str] = None
+    telegram_username: Optional[str] = Field(None, max_length=100)

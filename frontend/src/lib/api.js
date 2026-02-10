@@ -3,13 +3,7 @@ import { useAuthStore } from '../store';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
-/** Build full URL for upload paths (e.g. /uploads/kyc/xxx) so images load from backend. */
-export function getUploadUrl(path) {
-  if (!path) return path;
-  if (typeof path !== 'string' || path.startsWith('http')) return path;
-  const base = (API_URL || '').replace(/\/$/, '');
-  return base ? `${base}${path.startsWith('/') ? path : '/' + path}` : path;
-}
+
 
 const api = axios.create({
   baseURL: `${API_URL}/api`,
@@ -41,12 +35,12 @@ api.interceptors.response.use(
       code: 'NETWORK_ERROR',
       message: error.message || 'Network error occurred',
     };
-    
+
     // Handle 401 - logout user
     if (error.response?.status === 401) {
       useAuthStore.getState().logout();
     }
-    
+
     return Promise.reject(errorData);
   }
 );
@@ -70,6 +64,7 @@ export const usersAPI = {
   getProfile: () => api.get('/users/me'),
   updateProfile: (data) => api.put('/users/me', data),
   becomeSeller: () => api.post('/users/become-seller'),
+  getTelegramStatus: () => api.get('/users/me/telegram-status'),
 };
 
 // Sellers API
@@ -118,17 +113,17 @@ export const chatsAPI = {
   start: (data) => api.post('/chats/start', data),
   getOrderChat: (orderId) => api.get(`/chats/order/${orderId}`),
   getMessages: (conversationId, params) => api.get(`/chats/${conversationId}/messages`, { params }),
-  sendMessage: (conversationId, content, attachments = []) => 
+  sendMessage: (conversationId, content, attachments = []) =>
     api.post(`/chats/${conversationId}/messages`, { content, attachments }),
-  markRead: (conversationId, messageIds) => 
+  markRead: (conversationId, messageIds) =>
     api.post(`/chats/${conversationId}/read`, { message_ids: messageIds }),
   inviteAdmin: (conversationId) => api.post(`/chats/${conversationId}/invite-admin`),
   // Support chat endpoints
-  createSupportRequest: (subject, initialMessage, attachments = []) => 
+  createSupportRequest: (subject, initialMessage, attachments = []) =>
     api.post('/chats/support', { subject, initial_message: initialMessage, attachments }),
   getSupportRequests: () => api.get('/chats/support/requests'),
   acceptSupportRequest: (conversationId) => api.post(`/chats/support/${conversationId}/accept`),
-  closeSupportRequest: (conversationId, reason = null) => 
+  closeSupportRequest: (conversationId, reason = null) =>
     api.post(`/chats/support/${conversationId}/close`, { reason }),
 };
 
@@ -194,24 +189,24 @@ export const superAdminAPI = {
   getDashboard: () => api.get('/superadmin/dashboard'),
   getSystemHealth: () => api.get('/superadmin/system-health'),
   getAdminActions: (params) => api.get('/superadmin/admin-actions', { params }),
-  
+
   // Legacy stats
   getStats: () => api.get('/superadmin/stats'),
   getFinance: () => api.get('/superadmin/finance'),
-  
+
   // All Orders View
   getAllOrders: (params) => api.get('/superadmin/orders', { params }),
-  
+
   // Admin Management
   getAdmins: (params) => api.get('/superadmin/admins', { params }),
   createAdmin: (data) => api.post('/superadmin/admins', data),
   toggleAdmin: (id, data) => api.patch(`/superadmin/admins/${id}`, data),
-  
+
   // Admin Permission Scopes
   getAdminScopes: (adminId) => api.get(`/superadmin/admins/${adminId}/scopes`),
   updateAdminScopes: (adminId, data) => api.put(`/superadmin/admins/${adminId}/scopes`, data),
   applyAdminScopePreset: (adminId, data) => api.post(`/superadmin/admins/${adminId}/scopes/preset`, data),
-  
+
   // User Management
   getUsers: (params) => api.get('/superadmin/users', { params }),
   getUserDetail: (id) => api.get(`/superadmin/users/${id}`),
@@ -220,7 +215,7 @@ export const superAdminAPI = {
   forceLogout: (id, reason) => api.post(`/superadmin/users/${id}/force-logout?reason=${encodeURIComponent(reason)}`),
   unlockProfile: (id, data) => api.post(`/superadmin/users/${id}/unlock-profile`, data),
   suspendSeller: (id, data) => api.post(`/superadmin/users/${id}/suspend-seller`, data),
-  
+
   // Wallet / Finance
   creditWallet: (data, idempotencyKey) => api.post('/superadmin/wallet/credit', data, {
     headers: idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : {}
@@ -235,31 +230,39 @@ export const superAdminAPI = {
     headers: idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : {}
   }),
   getUserLedger: (userId, params) => api.get('/superadmin/wallet/ledger', { params: { user_id: userId, ...params } }),
-  
+
   // Withdrawals Management
   getWithdrawals: (params) => api.get('/superadmin/withdrawals', { params }),
   processWithdrawal: (id, data) => api.post(`/superadmin/withdrawals/${id}/process`, data),
-  
+
   // Order Overrides
   forceRefund: (orderId, data) => api.post(`/superadmin/orders/${orderId}/force-refund`, data),
   forceComplete: (orderId, data) => api.post(`/superadmin/orders/${orderId}/force-complete`, data),
   extendDisputeWindow: (orderId, data) => api.patch(`/superadmin/orders/${orderId}/dispute-window`, data),
-  
+
   // Content Moderation
   hideListing: (id, data) => api.patch(`/superadmin/listings/${id}/status`, data),
   hideMessage: (id, data) => api.patch(`/superadmin/messages/${id}/hide`, data),
-  
+
   // Gift Card Management
   generateGiftCards: (data) => api.post('/superadmin/giftcards/generate', data),
   getGiftCards: (params) => api.get('/superadmin/giftcards', { params }),
   deactivateGiftCard: (id, data) => api.post(`/superadmin/giftcards/${id}/deactivate`, data),
-  
+
   // Platform Config
   getConfig: () => api.get('/superadmin/config'),
   updateConfig: (data) => api.put('/superadmin/config', data),
-  
+
   // Legal Documents
   updateLegal: (data) => api.put('/superadmin/legal', data),
+};
+
+// Slides API
+export const slidesAPI = {
+  getAll: (activeOnly = true) => api.get('/slides', { params: { active_only: activeOnly } }),
+  create: (data) => api.post('/slides', data),
+  update: (id, data) => api.put(`/slides/${id}`, data),
+  delete: (id) => api.delete(`/slides/${id}`),
 };
 
 // Gift Cards API

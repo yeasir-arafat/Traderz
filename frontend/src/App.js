@@ -1,53 +1,55 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from './components/ui/sonner';
 import { Layout } from './components/layout/Layout';
 import { useAuthStore } from './store';
 
-// Pages
-import HomePage from './pages/HomePage';
-import LoginPage from './pages/LoginPage';
-import RegisterPage from './pages/RegisterPage';
-import BrowsePage from './pages/BrowsePage';
-import ListingDetailsPage from './pages/ListingDetailsPage';
-import ProfilePage from './pages/ProfilePage';
-import WalletPage from './pages/WalletPage';
-import OrdersPage from './pages/OrdersPage';
-import OrderDetailsPage from './pages/OrderDetailsPage';
-import ChatPage from './pages/ChatPage';
-import FAQPage from './pages/FAQPage';
-import NotFoundPage from './pages/NotFoundPage';
-import KycPage from './pages/KycPage';
-import NotificationsPage from './pages/NotificationsPage';
-import SellerProfilePage from './pages/SellerProfilePage';
-import ForgotPasswordPage from './pages/ForgotPasswordPage';
-import ResetPasswordPage from './pages/ResetPasswordPage';
+// Lazy load pages
+const HomePage = React.lazy(() => import('./pages/HomePage'));
+const LoginPage = React.lazy(() => import('./pages/LoginPage'));
+const RegisterPage = React.lazy(() => import('./pages/RegisterPage'));
+const BrowsePage = React.lazy(() => import('./pages/BrowsePage'));
+const ListingDetailsPage = React.lazy(() => import('./pages/ListingDetailsPage'));
+const ProfilePage = React.lazy(() => import('./pages/ProfilePage'));
+const WalletPage = React.lazy(() => import('./pages/WalletPage'));
+const OrdersPage = React.lazy(() => import('./pages/OrdersPage'));
+const OrderDetailsPage = React.lazy(() => import('./pages/OrderDetailsPage'));
+const ChatPage = React.lazy(() => import('./pages/ChatPage'));
+const FAQPage = React.lazy(() => import('./pages/FAQPage'));
+const NotFoundPage = React.lazy(() => import('./pages/NotFoundPage'));
+const KycPage = React.lazy(() => import('./pages/KycPage'));
+const NotificationsPage = React.lazy(() => import('./pages/NotificationsPage'));
+const SellerProfilePage = React.lazy(() => import('./pages/SellerProfilePage'));
+const ForgotPasswordPage = React.lazy(() => import('./pages/ForgotPasswordPage'));
+const ResetPasswordPage = React.lazy(() => import('./pages/ResetPasswordPage'));
+const ComingSoonPage = React.lazy(() => import('./pages/ComingSoonPage'));
 
 // Seller Pages
-import MyListingsPage from './pages/seller/MyListingsPage';
-import CreateListingPage from './pages/seller/CreateListingPage';
+const MyListingsPage = React.lazy(() => import('./pages/seller/MyListingsPage'));
+const CreateListingPage = React.lazy(() => import('./pages/seller/CreateListingPage'));
 
 // Admin Pages
-import AdminDashboardPage from './pages/admin/AdminDashboardPage';
-import PendingListingsPage from './pages/admin/PendingListingsPage';
-import PendingKycPage from './pages/admin/PendingKycPage';
-import DisputesPage from './pages/admin/DisputesPage';
+const AdminDashboardPage = React.lazy(() => import('./pages/admin/AdminDashboardPage'));
+const PendingListingsPage = React.lazy(() => import('./pages/admin/PendingListingsPage'));
+const PendingKycPage = React.lazy(() => import('./pages/admin/PendingKycPage'));
+const DisputesPage = React.lazy(() => import('./pages/admin/DisputesPage'));
 
 // Super Admin Pages
-import SuperAdminDashboardPage from './pages/superadmin/SuperAdminDashboardPage';
-import UsersManagementPage from './pages/superadmin/UsersManagementPage';
-import FinanceConsolePage from './pages/superadmin/FinanceConsolePage';
-import AuditLogsPage from './pages/superadmin/AuditLogsPage';
-import LegalPage from './pages/superadmin/LegalPage';
-import GamesFeesPage from './pages/superadmin/GamesFeesPage';
-import ModerationPage from './pages/superadmin/ModerationPage';
-import ConfigPage from './pages/superadmin/ConfigPage';
-import AllOrdersPage from './pages/superadmin/AllOrdersPage';
-import WithdrawalsPage from './pages/superadmin/WithdrawalsPage';
-import GiftCardsPage from './pages/superadmin/GiftCardsPage';
-import AdminScopesPage from './pages/superadmin/AdminScopesPage';
-import SystemHealthPage from './pages/superadmin/SystemHealthPage';
+const SuperAdminDashboardPage = React.lazy(() => import('./pages/superadmin/SuperAdminDashboardPage'));
+const UsersManagementPage = React.lazy(() => import('./pages/superadmin/UsersManagementPage'));
+const FinanceConsolePage = React.lazy(() => import('./pages/superadmin/FinanceConsolePage'));
+const AuditLogsPage = React.lazy(() => import('./pages/superadmin/AuditLogsPage'));
+const LegalPage = React.lazy(() => import('./pages/superadmin/LegalPage'));
+const GamesFeesPage = React.lazy(() => import('./pages/superadmin/GamesFeesPage'));
+const ModerationPage = React.lazy(() => import('./pages/superadmin/ModerationPage'));
+const ConfigPage = React.lazy(() => import('./pages/superadmin/ConfigPage'));
+const AllOrdersPage = React.lazy(() => import('./pages/superadmin/AllOrdersPage'));
+const WithdrawalsPage = React.lazy(() => import('./pages/superadmin/WithdrawalsPage'));
+const GiftCardsPage = React.lazy(() => import('./pages/superadmin/GiftCardsPage'));
+const AdminScopesPage = React.lazy(() => import('./pages/superadmin/AdminScopesPage'));
+const SystemHealthPage = React.lazy(() => import('./pages/superadmin/SystemHealthPage'));
+const SlidesManagementPage = React.lazy(() => import('./pages/admin/SlidesManagementPage'));
 
 
 const queryClient = new QueryClient({
@@ -59,6 +61,13 @@ const queryClient = new QueryClient({
     },
   },
 });
+
+// Loading Fallback
+const LoadingSpinner = () => (
+  <div className="flex h-screen w-full items-center justify-center bg-black">
+    <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#13ec5b] border-t-transparent shadow-[0_0_15px_rgba(19,236,91,0.5)]"></div>
+  </div>
+);
 
 // Protected Route wrapper
 function ProtectedRoute({ children }) {
@@ -110,271 +119,292 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
-        <Routes>
-          {/* Auth pages without layout */}
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
-          
-          {/* Pages with layout */}
-          <Route
-            path="/*"
-            element={
-              <Layout>
-                <Routes>
-                  <Route path="/" element={<HomePage />} />
-                  <Route path="/browse" element={<BrowsePage />} />
-                  <Route path="/listing/:id" element={<ListingDetailsPage />} />
-                  <Route path="/seller/:username" element={<SellerProfilePage />} />
-                  <Route path="/faq" element={<FAQPage />} />
-                  <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-                  <Route path="/reset-password" element={<ResetPasswordPage />} />
-                  
-                  {/* Protected routes */}
-                  <Route
-                    path="/profile"
-                    element={
-                      <ProtectedRoute>
-                        <ProfilePage />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/wallet"
-                    element={
-                      <ProtectedRoute>
-                        <WalletPage />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/orders"
-                    element={
-                      <ProtectedRoute>
-                        <OrdersPage />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/order/:id"
-                    element={
-                      <ProtectedRoute>
-                        <OrderDetailsPage />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/notifications"
-                    element={
-                      <ProtectedRoute>
-                        <NotificationsPage />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/chat"
-                    element={
-                      <ProtectedRoute>
-                        <ChatPage />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/chat/:id"
-                    element={
-                      <ProtectedRoute>
-                        <ChatPage />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/kyc"
-                    element={
-                      <ProtectedRoute>
-                        <KycPage />
-                      </ProtectedRoute>
-                    }
-                  />
-                  
-                  {/* Seller routes */}
-                  <Route
-                    path="/sell"
-                    element={
-                      <SellerRoute>
-                        <Navigate to="/my-listings" replace />
-                      </SellerRoute>
-                    }
-                  />
-                  <Route
-                    path="/my-listings"
-                    element={
-                      <SellerRoute>
-                        <MyListingsPage />
-                      </SellerRoute>
-                    }
-                  />
-                  <Route
-                    path="/sell/new"
-                    element={
-                      <SellerRoute>
-                        <CreateListingPage />
-                      </SellerRoute>
-                    }
-                  />
-                  <Route
-                    path="/sell/:id/edit"
-                    element={
-                      <SellerRoute>
-                        <CreateListingPage />
-                      </SellerRoute>
-                    }
-                  />
-                  
-                  {/* Admin routes */}
-                  <Route
-                    path="/admin"
-                    element={
-                      <AdminRoute>
-                        <AdminDashboardPage />
-                      </AdminRoute>
-                    }
-                  />
-                  <Route
-                    path="/admin/listings"
-                    element={
-                      <AdminRoute>
-                        <PendingListingsPage />
-                      </AdminRoute>
-                    }
-                  />
-                  <Route
-                    path="/admin/kyc"
-                    element={
-                      <AdminRoute>
-                        <PendingKycPage />
-                      </AdminRoute>
-                    }
-                  />
-                  <Route
-                    path="/admin/disputes"
-                    element={
-                      <AdminRoute>
-                        <DisputesPage />
-                      </AdminRoute>
-                    }
-                  />
-                  
-                  {/* Super Admin routes */}
-                  <Route
-                    path="/superadmin"
-                    element={
-                      <SuperAdminRoute>
-                        <SuperAdminDashboardPage />
-                      </SuperAdminRoute>
-                    }
-                  />
-                  <Route
-                    path="/superadmin/users"
-                    element={
-                      <SuperAdminRoute>
-                        <UsersManagementPage />
-                      </SuperAdminRoute>
-                    }
-                  />
-                  <Route
-                    path="/superadmin/config"
-                    element={
-                      <SuperAdminRoute>
-                        <ConfigPage />
-                      </SuperAdminRoute>
-                    }
-                  />
-                  <Route
-                    path="/superadmin/finance"
-                    element={
-                      <SuperAdminRoute>
-                        <FinanceConsolePage />
-                      </SuperAdminRoute>
-                    }
-                  />
-                  <Route
-                    path="/superadmin/audit-logs"
-                    element={
-                      <SuperAdminRoute>
-                        <AuditLogsPage />
-                      </SuperAdminRoute>
-                    }
-                  />
-                  <Route
-                    path="/superadmin/games-fees"
-                    element={
-                      <SuperAdminRoute>
-                        <GamesFeesPage />
-                      </SuperAdminRoute>
-                    }
-                  />
-                  <Route
-                    path="/superadmin/moderation"
-                    element={
-                      <SuperAdminRoute>
-                        <ModerationPage />
-                      </SuperAdminRoute>
-                    }
-                  />
-                  <Route
-                    path="/superadmin/legal"
-                    element={
-                      <SuperAdminRoute>
-                        <LegalPage />
-                      </SuperAdminRoute>
-                    }
-                  />
-                  <Route
-                    path="/superadmin/orders"
-                    element={
-                      <SuperAdminRoute>
-                        <AllOrdersPage />
-                      </SuperAdminRoute>
-                    }
-                  />
-                  <Route
-                    path="/superadmin/withdrawals"
-                    element={
-                      <SuperAdminRoute>
-                        <WithdrawalsPage />
-                      </SuperAdminRoute>
-                    }
-                  />
-                  <Route
-                    path="/superadmin/giftcards"
-                    element={
-                      <SuperAdminRoute>
-                        <GiftCardsPage />
-                      </SuperAdminRoute>
-                    }
-                  />
-                  <Route
-                    path="/superadmin/admin-scopes"
-                    element={
-                      <SuperAdminRoute>
-                        <AdminScopesPage />
-                      </SuperAdminRoute>
-                    }
-                  />
-                  <Route
-                    path="/superadmin/system-health"
-                    element={
-                      <SuperAdminRoute>
-                        <SystemHealthPage />
-                      </SuperAdminRoute>
-                    }
-                  />
-                  {/* 404 */}
-                  <Route path="*" element={<NotFoundPage />} />
-                </Routes>
-              </Layout>
-            }
-          />
-        </Routes>
+        <Suspense fallback={<LoadingSpinner />}>
+          <Routes>
+            {/* Auth pages without layout */}
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
+            <Route path="/coming-soon" element={<ComingSoonPage />} />
+
+            {/* Pages with layout */}
+            <Route
+              path="/*"
+              element={
+                <Layout>
+                  <Routes>
+                    <Route path="/" element={<HomePage />} />
+                    <Route path="/browse" element={<BrowsePage />} />
+                    <Route path="/listing/:id" element={<ListingDetailsPage />} />
+                    <Route path="/seller/:username" element={<SellerProfilePage />} />
+                    <Route path="/faq" element={<FAQPage />} />
+                    <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                    <Route path="/reset-password" element={<ResetPasswordPage />} />
+                    <Route path="/terms" element={<ComingSoonPage />} />
+                    <Route path="/privacy" element={<ComingSoonPage />} />
+
+                    {/* Protected routes */}
+                    <Route
+                      path="/profile"
+                      element={
+                        <ProtectedRoute>
+                          <ProfilePage />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/wallet"
+                      element={
+                        <ProtectedRoute>
+                          <WalletPage />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/orders"
+                      element={
+                        <ProtectedRoute>
+                          <OrdersPage />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/order/:id"
+                      element={
+                        <ProtectedRoute>
+                          <OrderDetailsPage />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/notifications"
+                      element={
+                        <ProtectedRoute>
+                          <NotificationsPage />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/chat"
+                      element={
+                        <ProtectedRoute>
+                          <ChatPage />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/chat/:id"
+                      element={
+                        <ProtectedRoute>
+                          <ChatPage />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/kyc"
+                      element={
+                        <ProtectedRoute>
+                          <KycPage />
+                        </ProtectedRoute>
+                      }
+                    />
+
+                    {/* Seller routes */}
+                    <Route
+                      path="/sell"
+                      element={
+                        <SellerRoute>
+                          <Navigate to="/my-listings" replace />
+                        </SellerRoute>
+                      }
+                    />
+                    <Route
+                      path="/my-listings"
+                      element={
+                        <SellerRoute>
+                          <MyListingsPage />
+                        </SellerRoute>
+                      }
+                    />
+                    <Route
+                      path="/sell/new"
+                      element={
+                        <SellerRoute>
+                          <CreateListingPage />
+                        </SellerRoute>
+                      }
+                    />
+                    <Route
+                      path="/sell/:id/edit"
+                      element={
+                        <SellerRoute>
+                          <CreateListingPage />
+                        </SellerRoute>
+                      }
+                    />
+
+                    {/* Admin routes */}
+                    <Route
+                      path="/admin"
+                      element={
+                        <AdminRoute>
+                          <AdminDashboardPage />
+                        </AdminRoute>
+                      }
+                    />
+                    <Route
+                      path="/admin/listings"
+                      element={
+                        <AdminRoute>
+                          <PendingListingsPage />
+                        </AdminRoute>
+                      }
+                    />
+                    <Route
+                      path="/admin/pending-listings"
+                      element={
+                        <AdminRoute>
+                          <PendingListingsPage />
+                        </AdminRoute>
+                      }
+                    />
+                    <Route
+                      path="/admin/kyc"
+                      element={
+                        <AdminRoute>
+                          <PendingKycPage />
+                        </AdminRoute>
+                      }
+                    />
+                    <Route
+                      path="/admin/disputes"
+                      element={
+                        <AdminRoute>
+                          <DisputesPage />
+                        </AdminRoute>
+                      }
+                    />
+                    <Route
+                      path="/admin/slides"
+                      element={
+                        <AdminRoute>
+                          <SlidesManagementPage />
+                        </AdminRoute>
+                      }
+                    />
+
+                    {/* Super Admin routes */}
+                    <Route
+                      path="/superadmin"
+                      element={
+                        <SuperAdminRoute>
+                          <SuperAdminDashboardPage />
+                        </SuperAdminRoute>
+                      }
+                    />
+                    <Route
+                      path="/superadmin/users"
+                      element={
+                        <SuperAdminRoute>
+                          <UsersManagementPage />
+                        </SuperAdminRoute>
+                      }
+                    />
+                    <Route
+                      path="/superadmin/config"
+                      element={
+                        <SuperAdminRoute>
+                          <ConfigPage />
+                        </SuperAdminRoute>
+                      }
+                    />
+                    <Route
+                      path="/superadmin/finance"
+                      element={
+                        <SuperAdminRoute>
+                          <FinanceConsolePage />
+                        </SuperAdminRoute>
+                      }
+                    />
+                    <Route
+                      path="/superadmin/audit-logs"
+                      element={
+                        <SuperAdminRoute>
+                          <AuditLogsPage />
+                        </SuperAdminRoute>
+                      }
+                    />
+                    <Route
+                      path="/superadmin/games-fees"
+                      element={
+                        <SuperAdminRoute>
+                          <GamesFeesPage />
+                        </SuperAdminRoute>
+                      }
+                    />
+                    <Route
+                      path="/superadmin/moderation"
+                      element={
+                        <SuperAdminRoute>
+                          <ModerationPage />
+                        </SuperAdminRoute>
+                      }
+                    />
+                    <Route
+                      path="/superadmin/legal"
+                      element={
+                        <SuperAdminRoute>
+                          <LegalPage />
+                        </SuperAdminRoute>
+                      }
+                    />
+                    <Route
+                      path="/superadmin/orders"
+                      element={
+                        <SuperAdminRoute>
+                          <AllOrdersPage />
+                        </SuperAdminRoute>
+                      }
+                    />
+                    <Route
+                      path="/superadmin/withdrawals"
+                      element={
+                        <SuperAdminRoute>
+                          <WithdrawalsPage />
+                        </SuperAdminRoute>
+                      }
+                    />
+                    <Route
+                      path="/superadmin/giftcards"
+                      element={
+                        <SuperAdminRoute>
+                          <GiftCardsPage />
+                        </SuperAdminRoute>
+                      }
+                    />
+                    <Route
+                      path="/superadmin/admin-scopes"
+                      element={
+                        <SuperAdminRoute>
+                          <AdminScopesPage />
+                        </SuperAdminRoute>
+                      }
+                    />
+                    <Route
+                      path="/superadmin/system-health"
+                      element={
+                        <SuperAdminRoute>
+                          <SystemHealthPage />
+                        </SuperAdminRoute>
+                      }
+                    />
+                    {/* 404 */}
+                    <Route path="*" element={<NotFoundPage />} />
+                  </Routes>
+                </Layout>
+              }
+            />
+          </Routes>
+        </Suspense>
         <Toaster position="top-right" richColors />
       </BrowserRouter>
     </QueryClientProvider>

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Home, Search, PlusCircle, MessageCircle, User, Bell, Wallet, LogOut, Settings, Shield } from 'lucide-react';
+import { Home, Search, PlusCircle, MessageCircle, User, Bell, Wallet, LogOut, Settings, Shield, Image as ImageIcon } from 'lucide-react';
 import { useAuthStore, useCurrencyStore, useNotificationStore, useChatNotificationStore } from '../../store';
 import { chatsAPI } from '../../lib/api';
 import { Button } from '../ui/button';
@@ -19,22 +19,22 @@ export function Layout({ children }) {
   const { user, isAuthenticated, logout, token } = useAuthStore();
   const { currency, setCurrency } = useCurrencyStore();
   const { unreadCount } = useNotificationStore();
-  const { 
-    unreadChatCount, 
-    hasNewMessage, 
-    setUnreadCount: setChatUnreadCount, 
+  const {
+    unreadChatCount,
+    hasNewMessage,
+    setUnreadCount: setChatUnreadCount,
     clearNewMessageFlag,
     incrementUnread: incrementChatUnread,
-    playNotificationSound 
+    playNotificationSound
   } = useChatNotificationStore();
-  
+
   const wsRef = useRef(null);
   const WS_URL = process.env.REACT_APP_BACKEND_URL?.replace('https://', 'wss://').replace('http://', 'ws://') + '/ws';
-  
+
   const isAdmin = user?.roles?.includes('admin') || user?.roles?.includes('super_admin');
   const isSuperAdmin = user?.roles?.includes('super_admin');
   const isSeller = user?.roles?.includes('seller');
-  
+
   // Fetch initial unread chat count
   useEffect(() => {
     const fetchUnreadCount = async () => {
@@ -49,14 +49,14 @@ export function Layout({ children }) {
     };
     fetchUnreadCount();
   }, [isAuthenticated, token, setChatUnreadCount]);
-  
+
   // WebSocket connection for real-time chat notifications
   useEffect(() => {
     if (!token || !isAuthenticated) return;
-    
+
     const connectWebSocket = () => {
       const ws = new WebSocket(`${WS_URL}?token=${token}`);
-      
+
       ws.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data);
@@ -64,7 +64,7 @@ export function Layout({ children }) {
             // Only notify if not on chat page or not in that conversation
             const onChatPage = location.pathname.startsWith('/chat');
             const inConversation = location.pathname.includes(data.conversation_id);
-            
+
             if (!onChatPage || !inConversation) {
               incrementChatUnread();
               playNotificationSound();
@@ -74,24 +74,24 @@ export function Layout({ children }) {
           // Ignore parsing errors
         }
       };
-      
+
       ws.onclose = () => {
         // Reconnect after 5 seconds
         setTimeout(connectWebSocket, 5000);
       };
-      
+
       wsRef.current = ws;
     };
-    
+
     connectWebSocket();
-    
+
     return () => {
       if (wsRef.current) {
         wsRef.current.close();
       }
     };
   }, [token, isAuthenticated, location.pathname, incrementChatUnread, playNotificationSound]);
-  
+
   // Clear new message flag after animation
   useEffect(() => {
     if (hasNewMessage) {
@@ -101,12 +101,12 @@ export function Layout({ children }) {
       return () => clearTimeout(timer);
     }
   }, [hasNewMessage, clearNewMessageFlag]);
-  
+
   const handleLogout = () => {
     logout();
     navigate('/');
   };
-  
+
   const navItems = [
     { icon: Home, label: 'Home', path: '/' },
     { icon: Search, label: 'Browse', path: '/browse' },
@@ -114,9 +114,18 @@ export function Layout({ children }) {
     { icon: MessageCircle, label: 'Chat', path: '/chat' },
     { icon: User, label: 'Profile', path: '/profile' },
   ];
-  
+
   return (
     <div className="min-h-screen bg-background">
+      {/* Mobile Header */}
+      <header className="md:hidden sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 h-14 flex items-center justify-center px-4">
+        <Link to="/" className="flex items-center gap-2">
+          <span className="text-xl font-heading font-bold text-primary neon-text">
+            PlayTraderz
+          </span>
+        </Link>
+      </header>
+
       {/* Desktop Header */}
       <header className="hidden md:block sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
@@ -125,7 +134,7 @@ export function Layout({ children }) {
               PlayTraderz
             </span>
           </Link>
-          
+
           <nav className="flex items-center gap-6">
             {navItems.slice(0, 3).map((item) => (
               <Link
@@ -140,7 +149,7 @@ export function Layout({ children }) {
               </Link>
             ))}
           </nav>
-          
+
           <div className="flex items-center gap-4">
             {/* Currency Toggle */}
             <Button
@@ -152,38 +161,38 @@ export function Layout({ children }) {
             >
               {currency}
             </Button>
-            
+
             {isAuthenticated ? (
               <>
                 {/* Chat Messages */}
-                <Link 
-                  to="/chat" 
+                <Link
+                  to="/chat"
                   className={cn(
                     "relative",
                     hasNewMessage && "animate-bounce"
-                  )} 
+                  )}
                   data-testid="chat-link"
                 >
-                  <MessageCircle 
+                  <MessageCircle
                     className={cn(
                       "w-5 h-5 transition-colors",
-                      hasNewMessage 
-                        ? "text-primary animate-pulse" 
+                      hasNewMessage
+                        ? "text-primary animate-pulse"
                         : "text-muted-foreground hover:text-primary"
-                    )} 
+                    )}
                   />
                   {unreadChatCount > 0 && (
                     <span className={cn(
                       "absolute -top-1 -right-1 w-4 h-4 text-xs rounded-full flex items-center justify-center",
-                      hasNewMessage 
-                        ? "bg-primary text-primary-foreground animate-ping-slow" 
+                      hasNewMessage
+                        ? "bg-primary text-primary-foreground animate-ping-slow"
                         : "bg-destructive text-destructive-foreground"
                     )}>
                       {unreadChatCount > 9 ? '9+' : unreadChatCount}
                     </span>
                   )}
                 </Link>
-                
+
                 {/* Notifications */}
                 <Link to="/notifications" className="relative" data-testid="notifications-link">
                   <Bell className="w-5 h-5 text-muted-foreground hover:text-primary transition-colors" />
@@ -193,12 +202,12 @@ export function Layout({ children }) {
                     </span>
                   )}
                 </Link>
-                
+
                 {/* Wallet */}
                 <Link to="/wallet" data-testid="wallet-link">
                   <Wallet className="w-5 h-5 text-muted-foreground hover:text-primary transition-colors" />
                 </Link>
-                
+
                 {/* User Menu */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -233,6 +242,10 @@ export function Layout({ children }) {
                           <Shield className="w-4 h-4 mr-2" />
                           Admin Panel
                         </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => navigate('/admin/slides')} data-testid="admin-slides-item">
+                          <ImageIcon className="w-4 h-4 mr-2" />
+                          Slides
+                        </DropdownMenuItem>
                       </>
                     )}
                     {isSuperAdmin && (
@@ -264,19 +277,19 @@ export function Layout({ children }) {
           </div>
         </div>
       </header>
-      
+
       {/* Main Content */}
       <main className="pb-20 md:pb-0">
         {children}
       </main>
-      
+
       {/* Mobile Bottom Navigation */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-background/90 backdrop-blur-lg border-t border-border z-50 h-16 flex items-center justify-around pb-safe">
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = location.pathname === item.path;
           const isChatItem = item.path === '/chat';
-          
+
           return (
             <Link
               key={item.path}
@@ -297,8 +310,8 @@ export function Layout({ children }) {
               {isChatItem && unreadChatCount > 0 && (
                 <span className={cn(
                   "absolute top-0 right-1 w-4 h-4 text-[10px] rounded-full flex items-center justify-center",
-                  hasNewMessage 
-                    ? "bg-primary text-primary-foreground animate-ping-slow" 
+                  hasNewMessage
+                    ? "bg-primary text-primary-foreground animate-ping-slow"
                     : "bg-destructive text-destructive-foreground"
                 )}>
                   {unreadChatCount > 9 ? '9+' : unreadChatCount}

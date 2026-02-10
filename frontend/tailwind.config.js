@@ -8,8 +8,9 @@ module.exports = {
   theme: {
     extend: {
       fontFamily: {
-        'heading': ['Rajdhani', 'sans-serif'],
-        'body': ['Outfit', 'sans-serif'],
+        'display': ['Inter', 'sans-serif'],
+        'heading': ['Inter', 'sans-serif'],
+        'body': ['Inter', 'sans-serif'],
         'mono': ['JetBrains Mono', 'monospace'],
       },
       borderRadius: {
@@ -57,7 +58,19 @@ module.exports = {
           '3': 'hsl(var(--chart-3))',
           '4': 'hsl(var(--chart-4))',
           '5': 'hsl(var(--chart-5))'
-        }
+        },
+        'background-light': '#f6f7f8',
+        'background-dark': '#101922',
+        'glass-dark': 'rgba(23, 31, 41, 0.8)',
+        'glass-light': 'rgba(255, 255, 255, 0.8)',
+        'unread-badge': '#007AFF',
+      },
+      boxShadow: {
+        'glow': '0 0 15px -3px rgba(43, 140, 238, 0.4)',
+        'glass': '0 8px 32px 0 rgba(0, 0, 0, 0.2)',
+      },
+      backdropBlur: {
+        'xs': '2px',
       },
       keyframes: {
         'accordion-down': {

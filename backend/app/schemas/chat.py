@@ -94,6 +94,7 @@ class ConversationResponse(BaseModel):
     closed_at: Optional[datetime] = None
     # Display name for the conversation (customized based on viewer role)
     display_name: Optional[str] = None
+    last_active_at: Optional[datetime] = None
 
     class Config:
         from_attributes = True

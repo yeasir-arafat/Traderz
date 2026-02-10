@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { 
-  Gamepad2, Search, Bell, ShoppingCart, ChevronRight, Shield, 
-  Verified, ArrowRight, Grid3X3, Flame, Home, MessageCircle, 
+import {
+  Gamepad2, Search, Bell, ShoppingCart, ChevronRight, Shield,
+  Verified, ArrowRight, Grid3X3, Flame, Home, MessageCircle,
   User, Plus, Globe, AtSign, MessageSquare
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
+import { HeroCarousel } from '../components/home/HeroCarousel';
 import { useAuthStore, useCurrencyStore } from '../store';
 import { listingsAPI, gamesAPI } from '../lib/api';
 import { formatCurrency, truncateText } from '../lib/utils';
@@ -18,7 +19,7 @@ export default function HomePage() {
   const [games, setGames] = useState([]);
   const [loading, setLoading] = useState(true);
   const [listingsByGame, setListingsByGame] = useState({});
-  
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -28,7 +29,7 @@ export default function HomePage() {
         ]);
         setFeaturedListings(listingsRes?.listings || []);
         setGames(gamesRes?.games || gamesRes || []);
-        
+
         // Group listings by game
         const grouped = {};
         (listingsRes?.listings || []).forEach(listing => {
@@ -74,63 +75,16 @@ export default function HomePage() {
   return (
     <div className="relative flex min-h-screen w-full flex-col overflow-x-hidden bg-black text-white font-sans antialiased pb-24 md:pb-0">
       {/* Hero Section */}
-      <div className="relative w-full">
-        <div className="relative h-[280px] w-full overflow-hidden md:h-[450px]">
-          <div 
-            className="absolute inset-0 bg-cover bg-center"
-            style={{ backgroundImage: "url('https://images.unsplash.com/photo-1542751371-adc38448a05e?w=1920&q=80')" }}
-          >
-            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent"></div>
-            <div className="absolute inset-0 bg-gradient-to-r from-black via-black/80 to-transparent"></div>
-          </div>
-          
-          <div className="absolute inset-0 flex flex-col justify-end p-6 md:p-12 pb-12">
-            <div className="max-w-2xl space-y-4">
-              <div className="inline-flex items-center rounded-full bg-[#13ec5b]/20 px-3 py-1 text-xs font-bold text-[#13ec5b] backdrop-blur-sm border border-[#13ec5b]/20 w-fit">
-                <Flame className="w-3.5 h-3.5 mr-1 fill-current" />
-                HOT DEAL
-              </div>
-              <h2 className="text-3xl md:text-5xl font-bold leading-tight text-white">
-                Level Up Your Game<br className="hidden md:block" /> Rank Today
-              </h2>
-              <p className="text-sm md:text-lg text-zinc-400 max-w-[80%]">
-                Secure escrow &amp; instant delivery on top-tier accounts with rare skins.
-              </p>
-              <div className="flex gap-3 pt-2">
-                <Button 
-                  onClick={() => navigate('/browse')}
-                  className="bg-[#13ec5b] text-black hover:bg-[#13ec5b]/90 shadow-[0_0_20px_rgba(19,236,91,0.4)] hover:shadow-[0_0_30px_rgba(19,236,91,0.6)] font-bold px-6 py-3"
-                  data-testid="browse-listings-btn"
-                >
-                  Browse Listings
-                </Button>
-                <Button 
-                  variant="ghost"
-                  className="bg-white/10 text-white hover:bg-white/20 backdrop-blur-md font-bold px-6 py-3"
-                >
-                  How It Works
-                </Button>
-              </div>
-            </div>
-          </div>
-          
-          {/* Carousel Indicators */}
-          <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2">
-            <div className="h-1.5 w-6 rounded-full bg-[#13ec5b] shadow-[0_0_10px_rgba(19,236,91,0.6)]"></div>
-            <div className="h-1.5 w-1.5 rounded-full bg-white/30"></div>
-            <div className="h-1.5 w-1.5 rounded-full bg-white/30"></div>
-          </div>
-        </div>
-      </div>
+      <HeroCarousel />
 
       {/* Game Sections */}
       <div className="space-y-8 py-8">
         {games.slice(0, 3).map((game) => {
           const gameListings = listingsByGame[game.id] || featuredListings.slice(0, 3);
           const colors = getGameColors(game.name);
-          
+
           if (gameListings.length === 0) return null;
-          
+
           return (
             <div key={game.id} className="flex flex-col gap-4">
               {/* Section Header */}
@@ -148,21 +102,21 @@ export default function HomePage() {
                     <p className="text-xs text-zinc-500">{game.description || 'Premium accounts available'}</p>
                   </div>
                 </div>
-                <Link 
+                <Link
                   to={`/browse?game=${game.id}`}
                   className="flex items-center text-xs font-bold text-[#13ec5b] hover:text-white transition-colors uppercase tracking-wider"
                 >
                   View All <ChevronRight className="w-4 h-4 ml-1" />
                 </Link>
               </div>
-              
+
               {/* Horizontal Scroll Cards */}
               <div className="flex w-full overflow-x-auto no-scrollbar px-4 md:px-8 pb-4">
                 <div className="flex gap-4">
                   {gameListings.slice(0, 4).map((listing) => (
-                    <ListingCard 
-                      key={listing.id} 
-                      listing={listing} 
+                    <ListingCard
+                      key={listing.id}
+                      listing={listing}
                       formatPrice={formatPrice}
                       onClick={() => navigate(`/listing/${listing.id}`)}
                     />
@@ -186,20 +140,20 @@ export default function HomePage() {
                   <p className="text-xs text-zinc-500">Handpicked top accounts</p>
                 </div>
               </div>
-              <Link 
+              <Link
                 to="/browse"
                 className="flex items-center text-xs font-bold text-[#13ec5b] hover:text-white transition-colors uppercase tracking-wider"
               >
                 View All <ChevronRight className="w-4 h-4 ml-1" />
               </Link>
             </div>
-            
+
             <div className="flex w-full overflow-x-auto no-scrollbar px-4 md:px-8 pb-4">
               <div className="flex gap-4">
                 {featuredListings.slice(0, 6).map((listing) => (
-                  <ListingCard 
-                    key={listing.id} 
-                    listing={listing} 
+                  <ListingCard
+                    key={listing.id}
+                    listing={listing}
                     formatPrice={formatPrice}
                     onClick={() => navigate(`/listing/${listing.id}`)}
                   />
@@ -259,49 +213,49 @@ export default function HomePage() {
                 The world's most secure marketplace for buying and selling gaming accounts. Verified sellers, instant delivery, and 24/7 support.
               </p>
               <div className="flex gap-3">
-                <a href="#" className="flex size-8 items-center justify-center rounded-full bg-white/5 text-zinc-500 hover:bg-[#13ec5b] hover:text-black transition-colors">
+                <Link to="/coming-soon" className="flex size-8 items-center justify-center rounded-full bg-white/5 text-zinc-500 hover:bg-[#13ec5b] hover:text-black transition-colors">
                   <Globe className="w-4 h-4" />
-                </a>
-                <a href="#" className="flex size-8 items-center justify-center rounded-full bg-white/5 text-zinc-500 hover:bg-[#13ec5b] hover:text-black transition-colors">
+                </Link>
+                <Link to="/coming-soon" className="flex size-8 items-center justify-center rounded-full bg-white/5 text-zinc-500 hover:bg-[#13ec5b] hover:text-black transition-colors">
                   <AtSign className="w-4 h-4" />
-                </a>
-                <a href="#" className="flex size-8 items-center justify-center rounded-full bg-white/5 text-zinc-500 hover:bg-[#13ec5b] hover:text-black transition-colors">
+                </Link>
+                <Link to="/coming-soon" className="flex size-8 items-center justify-center rounded-full bg-white/5 text-zinc-500 hover:bg-[#13ec5b] hover:text-black transition-colors">
                   <MessageSquare className="w-4 h-4" />
-                </a>
+                </Link>
               </div>
             </div>
-            
+
             <div>
               <h4 className="font-bold text-white mb-4">Company</h4>
               <ul className="space-y-3 text-sm text-zinc-500">
-                <li><a href="#" className="hover:text-[#13ec5b] transition-colors">About Us</a></li>
-                <li><a href="#" className="hover:text-[#13ec5b] transition-colors">Careers</a></li>
-                <li><a href="#" className="hover:text-[#13ec5b] transition-colors">Press Kit</a></li>
-                <li><a href="#" className="hover:text-[#13ec5b] transition-colors">Blog</a></li>
+                <li><Link to="/coming-soon" className="hover:text-[#13ec5b] transition-colors">About Us</Link></li>
+                <li><Link to="/coming-soon" className="hover:text-[#13ec5b] transition-colors">Careers</Link></li>
+                <li><Link to="/coming-soon" className="hover:text-[#13ec5b] transition-colors">Press Kit</Link></li>
+                <li><Link to="/coming-soon" className="hover:text-[#13ec5b] transition-colors">Blog</Link></li>
               </ul>
             </div>
-            
+
             <div>
               <h4 className="font-bold text-white mb-4">Support</h4>
               <ul className="space-y-3 text-sm text-zinc-500">
-                <li><a href="#" className="hover:text-[#13ec5b] transition-colors">Help Center</a></li>
-                <li><a href="#" className="hover:text-[#13ec5b] transition-colors">Safety Guide</a></li>
-                <li><a href="#" className="hover:text-[#13ec5b] transition-colors">Contact Us</a></li>
-                <li><a href="#" className="hover:text-[#13ec5b] transition-colors">Report Fraud</a></li>
+                <li><Link to="/faq" className="hover:text-[#13ec5b] transition-colors">Help Center</Link></li>
+                <li><Link to="/coming-soon" className="hover:text-[#13ec5b] transition-colors">Safety Guide</Link></li>
+                <li><Link to="/coming-soon" className="hover:text-[#13ec5b] transition-colors">Contact Us</Link></li>
+                <li><Link to="/coming-soon" className="hover:text-[#13ec5b] transition-colors">Report Fraud</Link></li>
               </ul>
             </div>
-            
+
             <div>
               <h4 className="font-bold text-white mb-4">Legal</h4>
               <ul className="space-y-3 text-sm text-zinc-500">
                 <li><Link to="/terms" className="hover:text-[#13ec5b] transition-colors">Terms of Service</Link></li>
                 <li><Link to="/privacy" className="hover:text-[#13ec5b] transition-colors">Privacy Policy</Link></li>
-                <li><a href="#" className="hover:text-[#13ec5b] transition-colors">Cookie Policy</a></li>
-                <li><a href="#" className="hover:text-[#13ec5b] transition-colors">Escrow Rules</a></li>
+                <li><Link to="/coming-soon" className="hover:text-[#13ec5b] transition-colors">Cookie Policy</Link></li>
+                <li><Link to="/coming-soon" className="hover:text-[#13ec5b] transition-colors">Escrow Rules</Link></li>
               </ul>
             </div>
           </div>
-          
+
           <div className="mt-12 pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-6">
             <p className="text-xs text-zinc-500 text-center md:text-left">© 2024 PlayTraderz Inc. All rights reserved.</p>
             <div className="flex items-center gap-3 opacity-60 grayscale hover:grayscale-0 transition-all">
@@ -314,52 +268,7 @@ export default function HomePage() {
         </div>
       </footer>
 
-      {/* Mobile Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-white/5 bg-black/95 backdrop-blur-xl md:hidden">
-        <div className="flex items-center justify-around px-2 py-3">
-          <button 
-            onClick={() => navigate('/')}
-            className="flex flex-col items-center gap-1 p-2 text-[#13ec5b]"
-          >
-            <Home className="w-6 h-6" />
-            <span className="text-[10px] font-medium">Home</span>
-          </button>
-          <button 
-            onClick={() => navigate('/browse')}
-            className="flex flex-col items-center gap-1 p-2 text-zinc-500 hover:text-white transition-colors"
-          >
-            <Search className="w-6 h-6" />
-            <span className="text-[10px] font-medium">Search</span>
-          </button>
-          <button 
-            onClick={() => navigate(isAuthenticated ? '/seller/listings/new' : '/login')}
-            className="flex flex-col items-center gap-1 p-2 -mt-6"
-          >
-            <div className="flex size-14 items-center justify-center rounded-full bg-[#13ec5b] shadow-[0_0_15px_rgba(19,236,91,0.5)] text-black">
-              <Plus className="w-7 h-7" />
-            </div>
-            <span className="text-[10px] font-medium text-zinc-500 mt-1">Sell</span>
-          </button>
-          <button 
-            onClick={() => navigate('/chat')}
-            className="flex flex-col items-center gap-1 p-2 text-zinc-500 hover:text-white transition-colors"
-          >
-            <div className="relative">
-              <MessageCircle className="w-6 h-6" />
-              <span className="absolute -right-1 -top-1 flex size-3 items-center justify-center rounded-full bg-red-500 text-[8px] font-bold text-white">2</span>
-            </div>
-            <span className="text-[10px] font-medium">Chat</span>
-          </button>
-          <button 
-            onClick={() => navigate(isAuthenticated ? '/profile' : '/login')}
-            className="flex flex-col items-center gap-1 p-2 text-zinc-500 hover:text-white transition-colors"
-          >
-            <User className="w-6 h-6" />
-            <span className="text-[10px] font-medium">Profile</span>
-          </button>
-        </div>
-        <div className="h-1 w-full"></div>
-      </nav>
+
 
       {/* Custom scrollbar hide style */}
       <style>{`
@@ -378,24 +287,24 @@ export default function HomePage() {
 // Listing Card Component
 function ListingCard({ listing, formatPrice, onClick }) {
   const badges = [];
-  
+
   if (listing.seller?.is_verified) badges.push({ text: 'Verified', color: 'text-[#13ec5b]', icon: true });
   if (listing.instant_delivery) badges.push({ text: 'Instant Delivery', color: 'text-zinc-400' });
-  
+
   return (
-    <div 
+    <div
       onClick={onClick}
       className="group relative w-[260px] flex-none overflow-hidden rounded-xl bg-zinc-900 border border-white/5 hover:border-[#13ec5b]/50 transition-colors cursor-pointer"
       data-testid={`listing-card-${listing.id}`}
     >
       {/* Image */}
       <div className="relative aspect-video w-full bg-zinc-800 overflow-hidden">
-        <div 
+        <div
           className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-110"
-          style={{ 
-            backgroundImage: listing.images?.[0] 
-              ? `url('${listing.images[0]}')` 
-              : `url('https://images.unsplash.com/photo-1542751371-adc38448a05e?w=400&q=80')` 
+          style={{
+            backgroundImage: listing.images?.[0]
+              ? `url('${listing.images[0]}')`
+              : `url('https://images.unsplash.com/photo-1542751371-adc38448a05e?w=400&q=80')`
           }}
         />
         {listing.featured && (
@@ -409,7 +318,7 @@ function ListingCard({ listing, formatPrice, onClick }) {
           </div>
         )}
       </div>
-      
+
       {/* Content */}
       <div className="p-4">
         <h4 className="text-sm font-bold text-white line-clamp-1">{listing.title}</h4>
@@ -427,7 +336,7 @@ function ListingCard({ listing, formatPrice, onClick }) {
         </div>
         <div className="mt-3 flex items-center justify-between border-t border-white/5 pt-3">
           <span className="text-lg font-bold text-white">{formatPrice(listing.price_usd)}</span>
-          <button 
+          <button
             onClick={(e) => { e.stopPropagation(); onClick(); }}
             className="rounded-lg bg-white/5 p-1.5 text-zinc-500 hover:bg-[#13ec5b] hover:text-black transition-colors"
           >

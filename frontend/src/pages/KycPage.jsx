@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  ArrowLeft, Shield, Upload, CheckCircle, Clock, XCircle, 
+import {
+  ArrowLeft, Shield, Upload, CheckCircle, Clock, XCircle,
   Loader2, FileImage, AlertCircle
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
@@ -15,7 +15,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../components/ui/select';
-import { kycAPI, uploadAPI, getUploadUrl } from '../lib/api';
+import { kycAPI, uploadAPI } from '../lib/api';
+import { getUploadUrl } from '../lib/utils';
 import { useAuthStore } from '../store';
 import { toast } from 'sonner';
 
@@ -49,28 +50,28 @@ const statusConfig = {
 export default function KycPage() {
   const navigate = useNavigate();
   const { user, isAuthenticated, updateUser } = useAuthStore();
-  
+
   const [kycStatus, setKycStatus] = useState(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [uploading, setUploading] = useState({ front: false, back: false, selfie: false });
-  
+
   const [formData, setFormData] = useState({
     doc_type: '',
     doc_front_url: '',
     doc_back_url: '',
     selfie_url: '',
   });
-  
+
   useEffect(() => {
     if (!isAuthenticated) {
       navigate('/login');
       return;
     }
-    
+
     fetchKycStatus();
   }, [isAuthenticated]);
-  
+
   const fetchKycStatus = async () => {
     setLoading(true);
     try {
@@ -82,7 +83,7 @@ export default function KycPage() {
       setLoading(false);
     }
   };
-  
+
   const uploadKeyMap = { doc_front_url: 'front', doc_back_url: 'back', selfie_url: 'selfie' };
   const handleUpload = async (field, e) => {
     const file = e.target.files?.[0];
@@ -105,10 +106,10 @@ export default function KycPage() {
     }
     e.target.value = '';
   };
-  
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!formData.doc_type) {
       toast.error('Please select a document type');
       return;
@@ -117,7 +118,7 @@ export default function KycPage() {
       toast.error('Please upload the front of your document');
       return;
     }
-    
+
     setSubmitting(true);
     try {
       const response = await kycAPI.submit(formData);
@@ -130,7 +131,7 @@ export default function KycPage() {
       setSubmitting(false);
     }
   };
-  
+
   if (loading) {
     return (
       <div className="container mx-auto px-4 py-8 flex justify-center">
@@ -138,22 +139,22 @@ export default function KycPage() {
       </div>
     );
   }
-  
+
   const status = kycStatus?.status || 'not_submitted';
   const StatusIcon = statusConfig[status]?.icon || AlertCircle;
-  
+
   return (
     <div className="container mx-auto px-4 py-8 max-w-2xl">
-      <Button 
-        variant="ghost" 
-        onClick={() => navigate('/profile')} 
+      <Button
+        variant="ghost"
+        onClick={() => navigate('/profile')}
         className="mb-4"
         data-testid="back-btn"
       >
         <ArrowLeft className="w-4 h-4 mr-2" />
         Back to Profile
       </Button>
-      
+
       <div className="flex items-center gap-3 mb-8">
         <Shield className="w-8 h-8 text-primary" />
         <div>
@@ -163,7 +164,7 @@ export default function KycPage() {
           </p>
         </div>
       </div>
-      
+
       {/* Current Status */}
       <Card className="mb-6">
         <CardHeader>
@@ -182,7 +183,7 @@ export default function KycPage() {
               </p>
             </div>
           </div>
-          
+
           {kycStatus?.review_note && status === 'rejected' && (
             <div className="mt-4 p-3 bg-red-500/10 rounded-lg">
               <p className="text-sm font-medium text-red-500">Rejection Reason:</p>
@@ -191,7 +192,7 @@ export default function KycPage() {
           )}
         </CardContent>
       </Card>
-      
+
       {/* Submission Form - Only show if not approved or pending */}
       {(status === 'not_submitted' || status === 'rejected') && (
         <Card>
@@ -203,8 +204,8 @@ export default function KycPage() {
               {/* Document Type */}
               <div>
                 <Label>Document Type *</Label>
-                <Select 
-                  value={formData.doc_type} 
+                <Select
+                  value={formData.doc_type}
                   onValueChange={(v) => setFormData({ ...formData, doc_type: v })}
                 >
                   <SelectTrigger className="mt-2" data-testid="doc-type-select">
@@ -219,16 +220,16 @@ export default function KycPage() {
                   </SelectContent>
                 </Select>
               </div>
-              
+
               {/* Document Front */}
               <div>
                 <Label>Document Front *</Label>
                 <div className="mt-2">
                   {formData.doc_front_url ? (
                     <div className="relative w-full h-40 rounded-lg overflow-hidden border">
-                      <img 
-                        src={getUploadUrl(formData.doc_front_url)} 
-                        alt="Document Front" 
+                      <img
+                        src={getUploadUrl(formData.doc_front_url)}
+                        alt="Document Front"
                         className="w-full h-full object-cover"
                       />
                       <button
@@ -262,16 +263,16 @@ export default function KycPage() {
                   )}
                 </div>
               </div>
-              
+
               {/* Document Back (optional) */}
               <div>
                 <Label>Document Back (optional)</Label>
                 <div className="mt-2">
                   {formData.doc_back_url ? (
                     <div className="relative w-full h-40 rounded-lg overflow-hidden border">
-                      <img 
-                        src={getUploadUrl(formData.doc_back_url)} 
-                        alt="Document Back" 
+                      <img
+                        src={getUploadUrl(formData.doc_back_url)}
+                        alt="Document Back"
                         className="w-full h-full object-cover"
                       />
                       <button
@@ -305,16 +306,16 @@ export default function KycPage() {
                   )}
                 </div>
               </div>
-              
+
               {/* Selfie (optional) */}
               <div>
                 <Label>Selfie with Document (optional but recommended)</Label>
                 <div className="mt-2">
                   {formData.selfie_url ? (
                     <div className="relative w-full h-40 rounded-lg overflow-hidden border">
-                      <img 
-                        src={getUploadUrl(formData.selfie_url)} 
-                        alt="Selfie" 
+                      <img
+                        src={getUploadUrl(formData.selfie_url)}
+                        alt="Selfie"
                         className="w-full h-full object-cover"
                       />
                       <button
@@ -348,10 +349,10 @@ export default function KycPage() {
                   )}
                 </div>
               </div>
-              
-              <Button 
-                type="submit" 
-                className="w-full" 
+
+              <Button
+                type="submit"
+                className="w-full"
                 disabled={submitting}
                 data-testid="submit-kyc-btn"
               >
@@ -366,7 +367,7 @@ export default function KycPage() {
           </CardContent>
         </Card>
       )}
-      
+
       {/* Guidelines */}
       <Card className="mt-6">
         <CardHeader>

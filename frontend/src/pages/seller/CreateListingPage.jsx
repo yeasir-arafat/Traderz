@@ -13,11 +13,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Checkbox } from '../../components/ui/checkbox';
 import { Badge } from '../../components/ui/badge';
 import { Alert, AlertDescription } from '../../components/ui/alert';
-import { gamesAPI, listingsAPI } from '../../lib/api';
+import { gamesAPI, listingsAPI, uploadAPI } from '../../lib/api';
 import { useAuthStore } from '../../store';
 import { toast } from 'sonner';
 
-const MAX_IMAGES = 5;
+const MAX_IMAGES = 1; // Single main image shown on listing card and detail page
 const MAX_ACCOUNT_DETAILS = 10;
 const RECOMMENDED_IMAGE_SIZE = '1280x720px (16:9 ratio)';
 
@@ -117,63 +117,37 @@ export default function CreateListingPage() {
   };
 
   const handleImageUpload = async (e) => {
-    const files = Array.from(e.target.files);
-    if (!files.length) return;
+    const file = e.target.files?.[0];
+    if (!file) return;
     
-    const remainingSlots = MAX_IMAGES - formData.images.length;
-    if (remainingSlots <= 0) {
-      toast.error(`Maximum ${MAX_IMAGES} images allowed`);
+    if (formData.images.length >= MAX_IMAGES) {
+      toast.error('Only one main image is allowed');
       return;
     }
     
-    const filesToUpload = files.slice(0, remainingSlots);
-    setUploadingImages(true);
+    if (!file.type.startsWith('image/')) {
+      toast.error(`${file.name} is not a valid image (use PNG, JPG, or WEBP)`);
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error(`${file.name} exceeds 5MB limit`);
+      return;
+    }
     
+    setUploadingImages(true);
     try {
-      const uploadPromises = filesToUpload.map(async (file) => {
-        // Validate file
-        if (!file.type.startsWith('image/')) {
-          throw new Error(`${file.name} is not an image`);
-        }
-        if (file.size > 5 * 1024 * 1024) {
-          throw new Error(`${file.name} exceeds 5MB limit`);
-        }
-        
-        // Create preview
-        const preview = URL.createObjectURL(file);
-        
-        // Upload to server
-        const formDataUpload = new FormData();
-        formDataUpload.append('file', file);
-        
-        const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/upload/listing`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          },
-          body: formDataUpload
-        });
-        
-        if (!response.ok) {
-          const error = await response.json();
-          throw new Error(error.error?.message || 'Upload failed');
-        }
-        
-        const data = await response.json();
-        return { url: data.data.url, preview };
-      });
-      
-      const results = await Promise.all(uploadPromises);
+      const preview = URL.createObjectURL(file);
+      const data = await uploadAPI.uploadListing(file);
+      const url = typeof data === 'object' && data?.url ? data.url : data;
       
       setFormData(prev => ({
         ...prev,
-        images: [...prev.images, ...results.map(r => r.url)]
+        images: [url]
       }));
-      setImagePreviews(prev => [...prev, ...results.map(r => r.preview)]);
-      
-      toast.success(`${results.length} image(s) uploaded`);
+      setImagePreviews([preview]);
+      toast.success('Main image uploaded');
     } catch (error) {
-      toast.error(error.message || 'Failed to upload images');
+      toast.error(error?.message || 'Failed to upload image');
     } finally {
       setUploadingImages(false);
       if (fileInputRef.current) {
@@ -200,6 +174,7 @@ export default function CreateListingPage() {
     if (!formData.platforms.length) newErrors.platforms = 'Select at least one platform';
     if (!formData.regions.length) newErrors.regions = 'Select at least one region';
     if (!formData.video_url) newErrors.video_url = 'Video URL is required';
+    if (!formData.images?.length) newErrors.images = 'Main image is required';
     
     // Validate account details
     const validDetails = formData.account_details.filter(d => d.label.trim() && d.value.trim());
@@ -501,41 +476,43 @@ export default function CreateListingPage() {
           </CardContent>
         </Card>
 
-        {/* Images */}
+        {/* Main Image */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Image className="w-5 h-5 text-primary" />
-              Screenshots
+              Main Image
             </CardTitle>
             <CardDescription>
-              Upload up to {MAX_IMAGES} images. Recommended size: {RECOMMENDED_IMAGE_SIZE}
+              Upload 1 image. This image will be shown on your listing card and detail page. Recommended size: {RECOMMENDED_IMAGE_SIZE}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {/* Image Previews */}
+              {errors.images && (
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>{errors.images}</AlertDescription>
+                </Alert>
+              )}
+              {/* Image Preview */}
               {imagePreviews.length > 0 && (
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-                  {imagePreviews.map((preview, index) => (
-                    <div key={index} className="relative group aspect-video rounded-lg overflow-hidden border border-border">
-                      <img
-                        src={preview}
-                        alt={`Preview ${index + 1}`}
-                        className="w-full h-full object-cover"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => removeImage(index)}
-                        className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                      <Badge className="absolute bottom-2 left-2 bg-black/70" variant="secondary">
-                        {index + 1}
-                      </Badge>
-                    </div>
-                  ))}
+                <div className="relative group aspect-video max-w-md rounded-lg overflow-hidden border border-border">
+                  <img
+                    src={imagePreviews[0]}
+                    alt="Main listing"
+                    className="w-full h-full object-cover"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeImage(0)}
+                    className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                  <Badge className="absolute bottom-2 left-2 bg-black/70" variant="secondary">
+                    Main image
+                  </Badge>
                 </div>
               )}
               
@@ -549,13 +526,12 @@ export default function CreateListingPage() {
                   <input
                     ref={fileInputRef}
                     type="file"
-                    accept="image/*"
-                    multiple
+                    accept="image/png,image/jpeg,image/jpg,image/webp"
                     onChange={handleImageUpload}
                     className="hidden"
                     id="image-upload"
                   />
-                  <label htmlFor="image-upload" className="cursor-pointer">
+                  <label htmlFor="image-upload" className="cursor-pointer block">
                     {uploadingImages ? (
                       <div className="flex flex-col items-center gap-2">
                         <Loader2 className="w-10 h-10 text-primary animate-spin" />
@@ -564,9 +540,9 @@ export default function CreateListingPage() {
                     ) : (
                       <div className="flex flex-col items-center gap-2">
                         <Upload className="w-10 h-10 text-muted-foreground" />
-                        <p className="text-sm font-medium">Click to upload images</p>
+                        <p className="text-sm font-medium">Click to upload main image</p>
                         <p className="text-xs text-muted-foreground">
-                          PNG, JPG, WEBP up to 5MB each • {MAX_IMAGES - formData.images.length} remaining
+                          PNG, JPG, WEBP up to 5MB
                         </p>
                         <p className="text-xs text-muted-foreground mt-1">
                           Recommended: {RECOMMENDED_IMAGE_SIZE}

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  ArrowLeft, FileCheck, CheckCircle, XCircle, Loader2, 
+import {
+  ArrowLeft, FileCheck, CheckCircle, XCircle, Loader2,
   User, FileImage, Clock, ExternalLink
 } from 'lucide-react';
 import { Button } from '../../components/ui/button';
@@ -16,14 +16,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from '../../components/ui/dialog';
-import { kycAPI, getUploadUrl } from '../../lib/api';
+import { kycAPI } from '../../lib/api';
+import { getUploadUrl } from '../../lib/utils';
 import { useAuthStore } from '../../store';
 import { toast } from 'sonner';
 
 export default function PendingKycPage() {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuthStore();
-  
+
   const [submissions, setSubmissions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [pagination, setPagination] = useState({ page: 1, total: 0, totalPages: 1 });
@@ -31,9 +32,9 @@ export default function PendingKycPage() {
   const [reviewNote, setReviewNote] = useState('');
   const [processing, setProcessing] = useState(false);
   const [viewingImage, setViewingImage] = useState(null);
-  
+
   const isAdmin = user?.roles?.includes('admin') || user?.roles?.includes('super_admin');
-  
+
   useEffect(() => {
     if (!isAuthenticated) {
       navigate('/login');
@@ -44,10 +45,10 @@ export default function PendingKycPage() {
       toast.error('Access denied');
       return;
     }
-    
+
     fetchSubmissions();
   }, [isAuthenticated, isAdmin]);
-  
+
   const fetchSubmissions = async (page = 1) => {
     setLoading(true);
     try {
@@ -64,13 +65,13 @@ export default function PendingKycPage() {
       setLoading(false);
     }
   };
-  
+
   const handleApprove = async () => {
     setProcessing(true);
     try {
-      await kycAPI.review(reviewingKyc.id, { 
-        approved: true, 
-        review_note: reviewNote || 'Approved' 
+      await kycAPI.review(reviewingKyc.id, {
+        approved: true,
+        review_note: reviewNote || 'Approved'
       });
       toast.success('KYC approved');
       setReviewingKyc(null);
@@ -82,18 +83,18 @@ export default function PendingKycPage() {
       setProcessing(false);
     }
   };
-  
+
   const handleReject = async () => {
     if (!reviewNote.trim()) {
       toast.error('Please provide a rejection reason');
       return;
     }
-    
+
     setProcessing(true);
     try {
-      await kycAPI.review(reviewingKyc.id, { 
-        approved: false, 
-        review_note: reviewNote 
+      await kycAPI.review(reviewingKyc.id, {
+        approved: false,
+        review_note: reviewNote
       });
       toast.success('KYC rejected');
       setReviewingKyc(null);
@@ -105,7 +106,7 @@ export default function PendingKycPage() {
       setProcessing(false);
     }
   };
-  
+
   const formatDocType = (type) => {
     const types = {
       national_id: 'National ID',
@@ -117,19 +118,19 @@ export default function PendingKycPage() {
     };
     return types[type] || type;
   };
-  
+
   return (
     <div className="container mx-auto px-4 py-8 max-w-6xl">
-      <Button 
-        variant="ghost" 
-        onClick={() => navigate('/admin')} 
+      <Button
+        variant="ghost"
+        onClick={() => navigate('/admin')}
         className="mb-4"
         data-testid="back-btn"
       >
         <ArrowLeft className="w-4 h-4 mr-2" />
         Back to Dashboard
       </Button>
-      
+
       <div className="flex items-center gap-3 mb-8">
         <FileCheck className="w-8 h-8 text-blue-500" />
         <div>
@@ -142,7 +143,7 @@ export default function PendingKycPage() {
           {pagination.total} pending
         </Badge>
       </div>
-      
+
       {loading ? (
         <div className="flex justify-center py-12">
           <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -180,21 +181,21 @@ export default function PendingKycPage() {
                         Pending
                       </Badge>
                     </div>
-                    
+
                     <p className="text-sm mb-3">
                       <span className="text-muted-foreground">Document Type:</span>{' '}
                       <span className="font-medium">{formatDocType(submission.doc_type)}</span>
                     </p>
-                    
+
                     {/* Documents */}
                     <div className="flex flex-wrap gap-3">
                       {submission.doc_front_url && (
-                        <div 
+                        <div
                           className="w-24 h-24 rounded-lg bg-muted overflow-hidden cursor-pointer hover:ring-2 ring-primary transition-all relative"
                           onClick={() => setViewingImage(submission.doc_front_url)}
                         >
-                          <img 
-                            src={getUploadUrl(submission.doc_front_url)} 
+                          <img
+                            src={getUploadUrl(submission.doc_front_url)}
                             alt="Document Front"
                             className="w-full h-full object-cover"
                           />
@@ -203,27 +204,27 @@ export default function PendingKycPage() {
                           </div>
                         </div>
                       )}
-                      
+
                       {submission.doc_back_url && (
-                        <div 
+                        <div
                           className="w-24 h-24 rounded-lg bg-muted overflow-hidden cursor-pointer hover:ring-2 ring-primary transition-all"
                           onClick={() => setViewingImage(submission.doc_back_url)}
                         >
-                          <img 
-                            src={getUploadUrl(submission.doc_back_url)} 
+                          <img
+                            src={getUploadUrl(submission.doc_back_url)}
                             alt="Document Back"
                             className="w-full h-full object-cover"
                           />
                         </div>
                       )}
-                      
+
                       {submission.selfie_url && (
-                        <div 
+                        <div
                           className="w-24 h-24 rounded-lg bg-muted overflow-hidden cursor-pointer hover:ring-2 ring-primary transition-all"
                           onClick={() => setViewingImage(submission.selfie_url)}
                         >
-                          <img 
-                            src={getUploadUrl(submission.selfie_url)} 
+                          <img
+                            src={getUploadUrl(submission.selfie_url)}
                             alt="Selfie"
                             className="w-full h-full object-cover"
                           />
@@ -231,7 +232,7 @@ export default function PendingKycPage() {
                       )}
                     </div>
                   </div>
-                  
+
                   {/* Actions */}
                   <div className="flex md:flex-col gap-2 flex-shrink-0">
                     <Button
@@ -251,7 +252,7 @@ export default function PendingKycPage() {
               </CardContent>
             </Card>
           ))}
-          
+
           {/* Pagination */}
           {pagination.totalPages > 1 && (
             <div className="flex justify-center gap-2 mt-6">
@@ -276,7 +277,7 @@ export default function PendingKycPage() {
           )}
         </div>
       )}
-      
+
       {/* Review Dialog */}
       <Dialog open={!!reviewingKyc} onOpenChange={() => setReviewingKyc(null)}>
         <DialogContent className="max-w-lg">
@@ -286,36 +287,36 @@ export default function PendingKycPage() {
               {formatDocType(reviewingKyc?.doc_type)} verification
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="space-y-4 py-4">
             {/* Document Preview */}
             <div className="flex gap-2 justify-center">
               {reviewingKyc?.doc_front_url && (
-                <img 
-                  src={getUploadUrl(reviewingKyc.doc_front_url)} 
+                <img
+                  src={getUploadUrl(reviewingKyc.doc_front_url)}
                   alt="Document Front"
                   className="w-32 h-32 object-cover rounded-lg cursor-pointer"
                   onClick={() => setViewingImage(reviewingKyc.doc_front_url)}
                 />
               )}
               {reviewingKyc?.doc_back_url && (
-                <img 
-                  src={getUploadUrl(reviewingKyc.doc_back_url)} 
+                <img
+                  src={getUploadUrl(reviewingKyc.doc_back_url)}
                   alt="Document Back"
                   className="w-32 h-32 object-cover rounded-lg cursor-pointer"
                   onClick={() => setViewingImage(reviewingKyc.doc_back_url)}
                 />
               )}
               {reviewingKyc?.selfie_url && (
-                <img 
-                  src={getUploadUrl(reviewingKyc.selfie_url)} 
+                <img
+                  src={getUploadUrl(reviewingKyc.selfie_url)}
                   alt="Selfie"
                   className="w-32 h-32 object-cover rounded-lg cursor-pointer"
                   onClick={() => setViewingImage(reviewingKyc.selfie_url)}
                 />
               )}
             </div>
-            
+
             <div>
               <label className="text-sm font-medium">Review Note (required for rejection)</label>
               <Textarea
@@ -328,13 +329,13 @@ export default function PendingKycPage() {
               />
             </div>
           </div>
-          
+
           <DialogFooter className="flex gap-2">
             <Button variant="outline" onClick={() => setReviewingKyc(null)}>
               Cancel
             </Button>
-            <Button 
-              variant="destructive" 
+            <Button
+              variant="destructive"
               onClick={handleReject}
               disabled={processing}
               data-testid="reject-kyc-btn"
@@ -342,7 +343,7 @@ export default function PendingKycPage() {
               {processing ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <XCircle className="w-4 h-4 mr-2" />}
               Reject
             </Button>
-            <Button 
+            <Button
               className="bg-green-600 hover:bg-green-700"
               onClick={handleApprove}
               disabled={processing}
@@ -354,12 +355,12 @@ export default function PendingKycPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      
+
       {/* Image Viewer */}
       <Dialog open={!!viewingImage} onOpenChange={() => setViewingImage(null)}>
         <DialogContent className="max-w-3xl">
-          <img 
-            src={getUploadUrl(viewingImage)} 
+          <img
+            src={getUploadUrl(viewingImage)}
             alt="Document"
             className="w-full h-auto max-h-[80vh] object-contain"
           />
